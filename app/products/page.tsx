@@ -14,10 +14,10 @@ export default async function ProductsPage() {
     getCategories()
   ])
   
-  // Get featured product for hero background
+  // Get featured product for hero background - with proper null checks
   const featuredProduct = products.find(p => 
     p.metadata?.tags?.some(tag => tag.slug === 'featured' || tag.slug === 'best-seller')
-  ) || products[0]
+  ) || (products.length > 0 ? products[0] : null)
   
   return (
     <div className="min-h-screen bg-white">
@@ -66,8 +66,8 @@ export default async function ProductsPage() {
           </div>
         </div>
 
-        {/* Featured Product Info */}
-        {featuredProduct && featuredProduct.metadata && (
+        {/* Featured Product Info - with proper null checks */}
+        {featuredProduct?.metadata && (
           <div className="absolute bottom-6 left-6 z-20 hidden lg:block">
             <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20 shadow-lg max-w-sm">
               <p className="text-xs text-white/70 mb-1">Featured Product</p>
@@ -78,12 +78,12 @@ export default async function ProductsPage() {
                 <span className="text-xl font-bold text-yellow-400">
                   ${featuredProduct.metadata.price ? featuredProduct.metadata.price.toFixed(2) : '0.00'}
                 </span>
-                {featuredProduct.metadata.tags && featuredProduct.metadata.tags.length > 0 && (
+                {featuredProduct.metadata.tags && featuredProduct.metadata.tags.length > 0 && featuredProduct.metadata.tags[0]?.metadata && (
                   <span
                     className="text-xs px-2 py-1 rounded-full text-white font-medium"
-                    style={{ backgroundColor: featuredProduct.metadata.tags[0].metadata?.color || '#6B7280' }}
+                    style={{ backgroundColor: featuredProduct.metadata.tags[0].metadata.color || '#6B7280' }}
                   >
-                    {featuredProduct.metadata.tags[0].metadata?.name || featuredProduct.metadata.tags[0].title}
+                    {featuredProduct.metadata.tags[0].metadata.name || featuredProduct.metadata.tags[0].title}
                   </span>
                 )}
               </div>

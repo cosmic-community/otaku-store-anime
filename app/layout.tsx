@@ -3,8 +3,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { getBaseMetadata } from '@/lib/seo'
 import { CartProvider } from '@/contexts/CartContext'
-import { getBaseMetadata, getOrganizationStructuredData } from '@/lib/seo'
 import CosmicBadge from '@/components/CosmicBadge'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -16,34 +16,20 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const organizationData = getOrganizationStructuredData()
+  // Get bucket slug for the CosmicBadge component
   const bucketSlug = process.env.COSMIC_BUCKET_SLUG as string
 
   return (
     <html lang="en">
-      <head>
-        {/* Organization Structured Data */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationData)
-          }}
-        />
-        
-        {/* Console capture script for dashboard debugging */}
-        <script src="/dashboard-console-capture.js"></script>
-      </head>
       <body className={inter.className}>
         <CartProvider>
           <div className="min-h-screen flex flex-col">
             <Header />
-            <main className="flex-grow">
+            <main className="flex-1">
               {children}
             </main>
             <Footer />
           </div>
-          
-          {/* Cosmic Badge */}
           <CosmicBadge bucketSlug={bucketSlug} />
         </CartProvider>
       </body>
