@@ -6,7 +6,7 @@ import ProductFilter from './ProductFilter'
 import type { Product, Category } from '@/types'
 
 interface ProductsClientProps {
-  products: Product[]
+  initialProducts: Product[]
   categories: Category[]
 }
 
@@ -17,7 +17,7 @@ interface FilterState {
   inStock: boolean | null
 }
 
-export default function ProductsClient({ products, categories }: ProductsClientProps) {
+export default function ProductsClient({ initialProducts, categories }: ProductsClientProps) {
   const [filters, setFilters] = useState<FilterState>({
     category: null,
     tags: [],
@@ -29,9 +29,9 @@ export default function ProductsClient({ products, categories }: ProductsClientP
 
   // Calculate price range from products
   const priceRange: [number, number] = useMemo(() => {
-    if (products.length === 0) return [0, 100]
+    if (initialProducts.length === 0) return [0, 100]
     
-    const prices = products
+    const prices = initialProducts
       .filter(product => product.metadata?.price)
       .map(product => product.metadata.price)
     
@@ -40,11 +40,11 @@ export default function ProductsClient({ products, categories }: ProductsClientP
     const min = Math.min(...prices)
     const max = Math.max(...prices)
     return [Math.floor(min), Math.ceil(max)]
-  }, [products])
+  }, [initialProducts])
 
   // Filter products based on current filters
   const filteredProducts = useMemo(() => {
-    let filtered = products
+    let filtered = initialProducts
 
     // Filter by category
     if (filters.category) {
@@ -77,7 +77,7 @@ export default function ProductsClient({ products, categories }: ProductsClientP
     }
 
     return filtered
-  }, [products, filters])
+  }, [initialProducts, filters])
 
   // Sort products
   const sortedProducts = useMemo(() => {
@@ -114,83 +114,85 @@ export default function ProductsClient({ products, categories }: ProductsClientP
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8">
-      {/* Filters Sidebar */}
-      <aside className="lg:w-1/4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
-            {(filters.category || filters.tags.length > 0 || filters.inStock !== null) && (
-              <button
-                onClick={clearFilters}
-                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-              >
-                Clear All
-              </button>
-            )}
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Filters Sidebar */}
+        <aside className="lg:w-1/4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+              {(filters.category || filters.tags.length > 0 || filters.inStock !== null) && (
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+            
+            <ProductFilter
+              categories={categories}
+              products={initialProducts}
+              filters={filters}
+              priceRange={priceRange}
+              onFilterChange={handleFilterChange}
+            />
           </div>
-          
-          <ProductFilter
-            categories={categories}
-            products={products}
-            filters={filters}
-            priceRange={priceRange}
-            onFilterChange={handleFilterChange}
-          />
-        </div>
-      </aside>
-
-      {/* Products Grid */}
-      <main className="lg:w-3/4">
-        {/* Sort and Results Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-          <p className="text-gray-600 mb-4 sm:mb-0">
-            Showing {sortedProducts.length} of {products.length} products
-          </p>
-          
-          <div className="flex items-center gap-2">
-            <label htmlFor="sort" className="text-sm font-medium text-gray-700">
-              Sort by:
-            </label>
-            <select
-              id="sort"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            >
-              <option value="newest">Newest First</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-              <option value="name">Name A-Z</option>
-            </select>
-          </div>
-        </div>
+        </aside>
 
         {/* Products Grid */}
-        {sortedProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-            {sortedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-8V9a2 2 0 01-2 2H9a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2z" />
-              </svg>
+        <main className="lg:w-3/4">
+          {/* Sort and Results Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+            <p className="text-gray-600 mb-4 sm:mb-0">
+              Showing {sortedProducts.length} of {initialProducts.length} products
+            </p>
+            
+            <div className="flex items-center gap-2">
+              <label htmlFor="sort" className="text-sm font-medium text-gray-700">
+                Sort by:
+              </label>
+              <select
+                id="sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="newest">Newest First</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="name">Name A-Z</option>
+              </select>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-600 mb-4">Try adjusting your filters to see more results.</p>
-            <button
-              onClick={clearFilters}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-            >
-              Clear Filters
-            </button>
           </div>
-        )}
-      </main>
+
+          {/* Products Grid */}
+          {sortedProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {sortedProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-8V9a2 2 0 01-2 2H9a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+              <p className="text-gray-600 mb-4">Try adjusting your filters to see more results.</p>
+              <button
+                onClick={clearFilters}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   )
 }

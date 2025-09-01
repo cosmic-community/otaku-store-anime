@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getProducts } from '@/lib/cosmic'
+import { getProducts, getCategories } from '@/lib/cosmic'
 import ProductsClient from '@/components/ProductsClient'
 import NewsletterSignup from '@/components/NewsletterSignup'
 import { getProductsMetadata } from '@/lib/seo'
@@ -9,7 +9,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ProductsPage() {
-  const products = await getProducts()
+  const [products, categories] = await Promise.all([
+    getProducts(),
+    getCategories()
+  ])
   
   return (
     <div className="min-h-screen bg-white">
@@ -26,7 +29,7 @@ export default async function ProductsPage() {
       </div>
 
       {/* Products Section */}
-      <ProductsClient initialProducts={products} />
+      <ProductsClient initialProducts={products} categories={categories} />
       
       {/* Newsletter Section */}
       <NewsletterSignup />
