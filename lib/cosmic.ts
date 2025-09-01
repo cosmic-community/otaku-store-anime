@@ -63,10 +63,17 @@ export async function getProduct(slug: string): Promise<Product | null> {
 // Get products by category
 export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
   try {
+    // First, get the category by slug to get its ID
+    const category = await getCategory(categorySlug)
+    if (!category) {
+      return []
+    }
+    
+    // Then query products by the category ID
     const response = await cosmic.objects
       .find({ 
         type: 'products',
-        'metadata.category.slug': categorySlug
+        'metadata.category': category.id
       })
       .props(['id', 'title', 'slug', 'metadata'])
       .depth(1)
