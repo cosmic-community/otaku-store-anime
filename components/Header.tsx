@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import CartIcon from './CartIcon'
 import CartDrawer from './CartDrawer'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const pathname = usePathname()
 
   // Close mobile menu when clicking outside or pressing escape
   useEffect(() => {
@@ -42,7 +44,7 @@ export default function Header() {
   // Close menu when route changes (for mobile)
   useEffect(() => {
     setIsMenuOpen(false)
-  }, [])
+  }, [pathname])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -79,7 +81,11 @@ export default function Header() {
                 <Link 
                   key={link.href}
                   href={link.href} 
-                  className="text-secondary-700 hover:text-primary-600 font-medium transition-colors"
+                  className={`font-medium transition-colors ${
+                    pathname === link.href
+                      ? 'text-primary-600'
+                      : 'text-secondary-700 hover:text-primary-600'
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -126,7 +132,11 @@ export default function Header() {
                   <Link 
                     key={link.href}
                     href={link.href} 
-                    className="text-secondary-700 hover:text-primary-600 font-medium transition-colors py-2"
+                    className={`font-medium transition-colors py-2 ${
+                      pathname === link.href
+                        ? 'text-primary-600'
+                        : 'text-secondary-700 hover:text-primary-600'
+                    }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {link.label}

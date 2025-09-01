@@ -3,6 +3,7 @@ import Hero from '@/components/Hero'
 import ProductCard from '@/components/ProductCard'
 import CategoryCard from '@/components/CategoryCard'
 import NewsletterSignup from '@/components/NewsletterSignup'
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getBaseMetadata, getBreadcrumbStructuredData } from '@/lib/seo'
 
@@ -73,12 +74,12 @@ export default async function HomePage() {
           </div>
           
           <div className="text-center mt-12">
-            <a 
+            <Link 
               href="/products"
               className="inline-block bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
             >
               View All Products
-            </a>
+            </Link>
           </div>
         </div>
       </section>
