@@ -134,14 +134,17 @@ export async function getTags(): Promise<Tag[]> {
 // Subscribe to newsletter
 export async function subscribeToNewsletter(email: string): Promise<boolean> {
   try {
+    // Generate a slug from email (remove @ and . characters)
+    const emailSlug = email.toLowerCase().replace(/[@.]/g, '')
+    
     await cosmic.objects.insertOne({
       type: 'newsletter_subscribers',
       title: email,
-      slug: `subscriber-${Date.now()}`,
+      slug: emailSlug,
       metadata: {
         email: email,
-        subscribed_at: new Date().toISOString(),
-        status: 'active'
+        subscribed_at: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+        status: 'Active' // Use exact value from select-dropdown metafield
       }
     })
     return true
