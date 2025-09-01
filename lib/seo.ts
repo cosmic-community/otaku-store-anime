@@ -80,7 +80,7 @@ export function getHomeMetadata(): Metadata {
       url: baseUrl,
       images: [
         {
-          url: `https://imgix.cosmicjs.com/b08b9bd0-86d9-11f0-8af5-6d65ce6e8553-generated-image.png`,
+          url: `https://imgix.cosmicjs.com/b08b9bd0-86d9-11f0-8af5-6d65ce6e8553-generated-image.png?w=1200`,
           width: 1200,
           height: 630,
           alt: siteName,
