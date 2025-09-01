@@ -90,12 +90,12 @@ export default function ProductsClient({ initialProducts, categories }: Products
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Filters Sidebar */}
         <aside className="lg:w-1/4">
-          <ProductFilter
-            categories={categories}
-            tags={[]} // Empty array for now since we don't have tags properly set up
-            onFilterChange={handleFilterChange}
-            className="sticky top-4"
-          />
+          // <ProductFilter
+          //   categories={categories}
+          //   tags={[]} // Empty array for now since we don't have tags properly set up
+          //   onFilterChange={handleFilterChange}
+          //   className="sticky top-4"
+          // />
         </aside>
 
         {/* Products Grid */}
