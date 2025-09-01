@@ -1,58 +1,49 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Product, Category, Tag } from '@/types'
-import ProductCard from './ProductCard'
-import ProductFilter from './ProductFilter'
+import ProductCard from '@/components/ProductCard'
+import ProductFilter from '@/components/ProductFilter'
+import type { Product, Category } from '@/types'
 
 interface ProductsClientProps {
   products: Product[]
   categories: Category[]
-  tags: Tag[]
 }
 
-export interface ProductFilterProps {
-  categories: Category[]
-  tags: Tag[]
-  products: Product[]
-  onFilterChange: (filters: {
-    category: string | null
-    tags: string[]
-    priceRange: [number, number]
-    inStock: boolean | null
-  }) => void
+interface FilterState {
+  category: string | null
+  tags: string[]
+  priceRange: [number, number]
+  inStock: boolean | null
 }
 
-export default function ProductsClient({ products, categories, tags }: ProductsClientProps) {
-  const [filters, setFilters] = useState<{
-    category: string | null
-    tags: string[]
-    priceRange: [number, number]
-    inStock: boolean | null
-  }>({
+export default function ProductsClient({ products, categories }: ProductsClientProps) {
+  const [filters, setFilters] = useState<FilterState>({
     category: null,
     tags: [],
     priceRange: [0, 100],
-    inStock: null
+    inStock: null,
   })
+
+  const [sortBy, setSortBy] = useState<string>('newest')
 
   // Calculate price range from products
   const priceRange = useMemo(() => {
     if (!products || products.length === 0) {
-      return [0, 100]
+      return [0, 100] as [number, number]
     }
-    
+
     const prices = products
-      .map(product => product.metadata?.price)
-      .filter((price): price is number => typeof price === 'number' && !isNaN(price))
+      .filter(product => product?.metadata?.price != null)
+      .map(product => product.metadata.price)
     
     if (prices.length === 0) {
-      return [0, 100]
+      return [0, 100] as [number, number]
     }
-    
-    const min = Math.floor(Math.min(...prices))
-    const max = Math.ceil(Math.max(...prices))
-    return [min, max]
+
+    const min = Math.min(...prices)
+    const max = Math.max(...prices)
+    return [Math.floor(min), Math.ceil(max)] as [number, number]
   }, [products])
 
   // Filter products based on current filters
@@ -74,8 +65,9 @@ export default function ProductsClient({ products, categories, tags }: ProductsC
       // Tags filter
       if (filters.tags.length > 0) {
         const productTags = product.metadata.tags || []
-        const hasMatchingTag = filters.tags.some(filterTag =>
-          productTags.some(productTag => productTag?.slug === filterTag)
+        const productTagSlugs = productTags.map(tag => tag?.slug).filter(Boolean)
+        const hasMatchingTag = filters.tags.some(filterTag => 
+          productTagSlugs.includes(filterTag)
         )
         if (!hasMatchingTag) {
           return false
@@ -84,10 +76,8 @@ export default function ProductsClient({ products, categories, tags }: ProductsC
 
       // Price range filter
       const price = product.metadata.price
-      if (typeof price === 'number' && !isNaN(price)) {
-        if (price < filters.priceRange[0] || price > filters.priceRange[1]) {
-          return false
-        }
+      if (price != null && (price < filters.priceRange[0] || price > filters.priceRange[1])) {
+        return false
       }
 
       // Stock filter
@@ -104,58 +94,131 @@ export default function ProductsClient({ products, categories, tags }: ProductsC
     })
   }, [products, filters])
 
-  const handleFilterChange = (newFilters: typeof filters) => {
+  // Sort filtered products
+  const sortedProducts = useMemo(() => {
+    if (!filteredProducts || filteredProducts.length === 0) {
+      return []
+    }
+
+    const sorted = [...filteredProducts]
+    
+    switch (sortBy) {
+      case 'price-low':
+        return sorted.sort((a, b) => (a.metadata?.price || 0) - (b.metadata?.price || 0))
+      case 'price-high':
+        return sorted.sort((a, b) => (b.metadata?.price || 0) - (a.metadata?.price || 0))
+      case 'name':
+        return sorted.sort((a, b) => (a.metadata?.name || '').localeCompare(b.metadata?.name || ''))
+      case 'newest':
+      default:
+        return sorted.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+    }
+  }, [filteredProducts, sortBy])
+
+  // Handle filter updates - fixed parameter type
+  const handleFiltersChange = (newFilters: FilterState) => {
     setFilters(newFilters)
+  }
+
+  // Get unique tags from all products
+  const availableTags = useMemo(() => {
+    if (!products || products.length === 0) {
+      return []
+    }
+
+    const tagMap = new Map()
+    products.forEach(product => {
+      if (product?.metadata?.tags) {
+        product.metadata.tags.forEach(tag => {
+          if (tag && tag.slug && tag.metadata?.name) {
+            tagMap.set(tag.slug, {
+              slug: tag.slug,
+              name: tag.metadata.name,
+              color: tag.metadata.color || '#6b7280'
+            })
+          }
+        })
+      }
+    })
+    return Array.from(tagMap.values())
+  }, [products])
+
+  // Handle price range update - ensure it's always a tuple
+  const handlePriceRangeChange = (range: number[]) => {
+    // Ensure we have exactly 2 elements for the tuple
+    const priceRange: [number, number] = [
+      range[0] ?? 0,
+      range[1] ?? 100
+    ]
+    setFilters(prev => ({ ...prev, priceRange }))
+  }
+
+  if (!products || products.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-xl text-secondary-600">No products available at the moment.</p>
+      </div>
+    )
   }
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
-      {/* Filter Sidebar */}
-      <div className="lg:w-1/4">
+      {/* Filters Sidebar */}
+      <div className="lg:w-80 flex-shrink-0">
         <ProductFilter
           categories={categories}
-          tags={tags}
-          products={products}
-          onFilterChange={handleFilterChange}
+          tags={availableTags}
+          priceRange={priceRange}
+          onFiltersChange={handleFiltersChange}
+          onPriceRangeChange={handlePriceRangeChange}
         />
       </div>
 
       {/* Products Grid */}
-      <div className="lg:w-3/4">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-secondary-900">
-            Products {filteredProducts.length > 0 && `(${filteredProducts.length})`}
-          </h2>
+      <div className="flex-1">
+        {/* Sort Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <p className="text-secondary-600">
+            Showing {sortedProducts.length} of {products.length} products
+          </p>
+          
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-4 py-2 border border-secondary-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="newest">Newest First</option>
+            <option value="name">Name A-Z</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+          </select>
         </div>
 
-        {filteredProducts.length === 0 ? (
+        {/* Products Grid */}
+        {sortedProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sortedProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
           <div className="text-center py-12">
-            <div className="text-secondary-400 mb-4">
-              <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-secondary-700 mb-2">No products found</h3>
-            <p className="text-secondary-500 mb-4">
-              Try adjusting your filters to see more results.
+            <p className="text-xl text-secondary-600">
+              No products match your current filters.
             </p>
             <button
               onClick={() => setFilters({
                 category: null,
                 tags: [],
-                priceRange,
-                inStock: null
+                priceRange: [0, 100],
+                inStock: null,
               })}
-              className="text-primary-600 hover:text-primary-700 font-medium"
+              className="mt-4 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
-              Clear all filters
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+              Clear Filters
+            </summary>
           </div>
         )}
       </div>

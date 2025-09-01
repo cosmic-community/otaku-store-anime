@@ -1,42 +1,39 @@
 import { getProducts, getCategories } from '@/lib/cosmic'
 import ProductsClient from '@/components/ProductsClient'
-import type { Metadata } from 'next'
-import { getProductsMetadata, getBreadcrumbStructuredData } from '@/lib/seo'
+import type { Product, Category } from '@/types'
 
-export const metadata: Metadata = getProductsMetadata()
+export const metadata = {
+  title: 'Products - Otaku Store',
+  description: 'Browse our collection of anime-themed merchandise including t-shirts, stickers, and limited edition items.',
+}
 
 export default async function ProductsPage() {
   const [products, categories] = await Promise.all([
     getProducts(),
-    getCategories()
+    getCategories(),
   ])
 
-  // Generate breadcrumb structured data
-  const breadcrumbData = getBreadcrumbStructuredData([
-    { name: 'Home', url: '/' },
-    { name: 'Products' }
-  ])
+  // Ensure we have valid data before passing to client component
+  const validProducts: Product[] = products || []
+  const validCategories: Category[] = categories || []
 
   return (
-    <>
-      {/* Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbData)
-        }}
-      />
-
+    <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-secondary-900 mb-4">All Products</h1>
-          <p className="text-lg text-secondary-600">
-            Browse our complete collection of premium anime merchandise
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-secondary-900 mb-4">
+            Our Products
+          </h1>
+          <p className="text-xl text-secondary-600 max-w-2xl mx-auto">
+            Discover our curated collection of premium anime merchandise, from trendy apparel to collectible items.
           </p>
         </div>
-        
-        <ProductsClient initialProducts={products} categories={categories} />
+
+        <ProductsClient 
+          products={validProducts}
+          categories={validCategories}
+        />
       </div>
-    </>
+    </div>
   )
 }
