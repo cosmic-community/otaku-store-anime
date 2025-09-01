@@ -90,12 +90,12 @@ export default function ProductsClient({ initialProducts, categories }: Products
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Filters Sidebar */}
         <aside className="lg:w-1/4">
-          {/* <ProductFilter
+          <ProductFilter
             categories={categories}
             tags={[]} // Empty array for now since we don't have tags properly set up
             onFilterChange={handleFilterChange}
             className="sticky top-4"
-          />*/}
+          />
         </aside>
 
         {/* Products Grid */}
@@ -124,6 +124,7 @@ export default function ProductsClient({ initialProducts, categories }: Products
               <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
               <p className="text-gray-600 mb-4">Try adjusting your filters to see more results.</p>
               <button
+                type="button"
                 onClick={() => handleFilterChange({
                   categories: [],
                   tags: [],
