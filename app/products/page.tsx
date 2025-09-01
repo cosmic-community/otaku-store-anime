@@ -1,47 +1,35 @@
-import { Suspense } from 'react'
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
+import { getProducts } from '@/lib/cosmic'
 import ProductsClient from '@/components/ProductsClient'
-import { getProducts, getCategories } from '@/lib/cosmic'
-import { getProductsPageMetadata } from '@/lib/seo'
+import NewsletterSignup from '@/components/NewsletterSignup'
+import { getProductsMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = getProductsPageMetadata()
+export async function generateMetadata(): Promise<Metadata> {
+  return getProductsMetadata()
+}
 
 export default async function ProductsPage() {
-  // Fetch data on server
-  const [products, categories] = await Promise.all([
-    getProducts(),
-    getCategories()
-  ])
-
+  const products = await getProducts()
+  
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-16">
+      <div className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-16">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Premium Anime Collection
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            Premium Anime Merchandise
           </h1>
           <p className="text-xl text-primary-100 max-w-2xl mx-auto">
-            Discover our curated selection of high-quality anime merchandise, from trending t-shirts to exclusive collectibles.
+            Discover our curated collection of high-quality anime-themed products. From exclusive t-shirts to collectible stickers, find your perfect otaku gear.
           </p>
         </div>
-      </section>
+      </div>
 
       {/* Products Section */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <Suspense fallback={
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            </div>
-          }>
-            <ProductsClient 
-              products={products}
-              categories={categories}
-            />
-          </Suspense>
-        </div>
-      </section>
+      <ProductsClient initialProducts={products} />
+      
+      {/* Newsletter Section */}
+      <NewsletterSignup />
     </div>
   )
 }
