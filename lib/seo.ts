@@ -7,7 +7,17 @@ const SITE_URL = process.env.NODE_ENV === 'production'
   ? 'https://otaku-store-anime.cosmic.site' 
   : 'http://localhost:3000'
 
-export function getBaseMetadata(): Metadata {
+interface BaseMetadataOptions {
+  title?: string
+  description?: string
+  ogType?: 'website' | 'home' | 'products' | 'product' | 'category'
+}
+
+export function getBaseMetadata(options?: BaseMetadataOptions): Metadata {
+  const title = options?.title || SITE_NAME
+  const description = options?.description || SITE_DESCRIPTION
+  const ogType = options?.ogType || 'website'
+  
   return {
     metadataBase: new URL(SITE_URL),
     title: {
@@ -33,23 +43,23 @@ export function getBaseMetadata(): Metadata {
       type: 'website',
       locale: 'en_US',
       url: SITE_URL,
-      title: SITE_NAME,
-      description: SITE_DESCRIPTION,
+      title,
+      description,
       siteName: SITE_NAME,
       images: [
         {
-          url: `${SITE_URL}/api/og?title=${encodeURIComponent(SITE_NAME)}&description=${encodeURIComponent(SITE_DESCRIPTION)}&type=website`,
+          url: `${SITE_URL}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&type=${ogType}`,
           width: 1200,
           height: 630,
-          alt: SITE_NAME,
+          alt: title,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: SITE_NAME,
-      description: SITE_DESCRIPTION,
-      images: [`${SITE_URL}/api/og?title=${encodeURIComponent(SITE_NAME)}&description=${encodeURIComponent(SITE_DESCRIPTION)}&type=website`],
+      title,
+      description,
+      images: [`${SITE_URL}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&type=${ogType}`],
     },
     robots: {
       index: true,

@@ -8,9 +8,11 @@ import type { Metadata } from 'next'
 import { getBaseMetadata, getBreadcrumbStructuredData } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  ...getBaseMetadata(),
-  title: 'Otaku Store - Premium Anime T-Shirts & Stickers',
-  description: 'Discover premium anime-themed t-shirts, kawaii stickers, and limited edition merchandise. Express your otaku spirit with our curated collection.',
+  ...getBaseMetadata({
+    title: 'Otaku Store - Premium Anime T-Shirts & Stickers',
+    description: 'Discover premium anime-themed t-shirts, kawaii stickers, and limited edition merchandise. Express your otaku spirit with our curated collection.',
+    ogType: 'home'
+  }),
 }
 
 export default async function HomePage() {

@@ -8,7 +8,198 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const title = searchParams.get('title') || 'Otaku Store'
     const description = searchParams.get('description') || 'Premium anime merchandise for true fans'
+    const type = searchParams.get('type') || 'website'
     
+    // Different layouts based on type
+    if (type === 'home') {
+      return new ImageResponse(
+        (
+          <div
+            style={{
+              height: '100%',
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#f8fafc',
+              fontFamily: 'system-ui',
+            }}
+          >
+            {/* Simple product showcase layout */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                height: '100%',
+                padding: '60px',
+              }}
+            >
+              {/* Left side - Text content */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  width: '55%',
+                  height: '100%',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '48px',
+                    fontWeight: 'bold',
+                    color: '#667eea',
+                    marginBottom: '16px',
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {title}
+                </div>
+                <div
+                  style={{
+                    fontSize: '24px',
+                    color: '#64748b',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {description}
+                </div>
+                
+                {/* Simple feature badges */}
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '12px',
+                    marginTop: '32px',
+                  }}
+                >
+                  <div
+                    style={{
+                      backgroundColor: '#667eea',
+                      color: 'white',
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      fontSize: '16px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Premium Quality
+                  </div>
+                  <div
+                    style={{
+                      backgroundColor: '#764ba2',
+                      color: 'white',
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      fontSize: '16px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Limited Edition
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right side - Product mockup */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '40%',
+                  height: '100%',
+                }}
+              >
+                {/* T-shirt mockup */}
+                <div
+                  style={{
+                    width: '280px',
+                    height: '320px',
+                    backgroundColor: '#667eea',
+                    borderRadius: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 20px 40px rgba(102, 126, 234, 0.3)',
+                    position: 'relative',
+                  }}
+                >
+                  {/* T-shirt design */}
+                  <div
+                    style={{
+                      width: '200px',
+                      height: '240px',
+                      backgroundColor: 'white',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '20px',
+                    }}
+                  >
+                    {/* Anime character placeholder */}
+                    <div
+                      style={{
+                        fontSize: '60px',
+                        marginBottom: '10px',
+                      }}
+                    >
+                      🎌
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                        color: '#667eea',
+                      }}
+                    >
+                      Anime Collection
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '8px',
+                      }}
+                    >
+                      <div style={{ fontSize: '20px' }}>⭐</div>
+                      <div style={{ fontSize: '20px' }}>🎭</div>
+                      <div style={{ fontSize: '20px' }}>✨</div>
+                    </div>
+                  </div>
+                  
+                  {/* Price tag */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '-10px',
+                      right: '-10px',
+                      backgroundColor: '#764ba2',
+                      color: 'white',
+                      padding: '8px 12px',
+                      borderRadius: '12px',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      boxShadow: '0 4px 12px rgba(118, 75, 162, 0.4)',
+                    }}
+                  >
+                    $24.99
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ),
+        {
+          width: 1200,
+          height: 630,
+        },
+      )
+    }
+    
+    // Default layout for other types
     return new ImageResponse(
       (
         <div
