@@ -67,23 +67,23 @@ export default async function ProductsPage() {
         </div>
 
         {/* Featured Product Info */}
-        {featuredProduct && (
+        {featuredProduct && featuredProduct.metadata && (
           <div className="absolute bottom-6 left-6 z-20 hidden lg:block">
             <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20 shadow-lg max-w-sm">
               <p className="text-xs text-white/70 mb-1">Featured Product</p>
               <h3 className="text-base font-semibold text-white mb-2 line-clamp-2">
-                {featuredProduct.metadata.name}
+                {featuredProduct.metadata.name || featuredProduct.title}
               </h3>
               <div className="flex items-center justify-between">
                 <span className="text-xl font-bold text-yellow-400">
-                  ${featuredProduct.metadata.price.toFixed(2)}
+                  ${featuredProduct.metadata.price ? featuredProduct.metadata.price.toFixed(2) : '0.00'}
                 </span>
                 {featuredProduct.metadata.tags && featuredProduct.metadata.tags.length > 0 && (
                   <span
                     className="text-xs px-2 py-1 rounded-full text-white font-medium"
                     style={{ backgroundColor: featuredProduct.metadata.tags[0].metadata?.color || '#6B7280' }}
                   >
-                    {featuredProduct.metadata.tags[0].metadata?.name}
+                    {featuredProduct.metadata.tags[0].metadata?.name || featuredProduct.metadata.tags[0].title}
                   </span>
                 )}
               </div>

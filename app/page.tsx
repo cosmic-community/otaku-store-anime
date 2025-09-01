@@ -4,7 +4,7 @@ import CategoryCard from '@/components/CategoryCard'
 import ProductCard from '@/components/ProductCard'
 import NewsletterSignup from '@/components/NewsletterSignup'
 import { getProducts, getCategories } from '@/lib/cosmic'
-import { getHomeMetadata, getHomeStructuredData } from '@/lib/seo'
+import { getHomeMetadata, getOrganizationStructuredData, getWebsiteStructuredData } from '@/lib/seo'
 import Link from 'next/link'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -24,7 +24,8 @@ export default async function HomePage() {
   const latestProducts = products.slice(0, 8)
 
   // Generate structured data
-  const structuredData = getHomeStructuredData()
+  const organizationData = getOrganizationStructuredData()
+  const websiteData = getWebsiteStructuredData()
 
   return (
     <>
@@ -32,7 +33,7 @@ export default async function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData)
+          __html: JSON.stringify([organizationData, websiteData])
         }}
       />
 
