@@ -1,286 +1,273 @@
 import type { Metadata } from 'next'
-import type { Product } from '@/types'
+import type { Product, Category } from '@/types'
 
-// Base site configuration
 const siteConfig = {
   name: 'Otaku Store',
-  description: 'Premium anime merchandise and collectibles. Discover high-quality t-shirts, stickers, and exclusive items for true otaku fans.',
-  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://otaku-store.vercel.app',
-  ogImage: '/og-image.jpg',
-  creator: '@otaku_store',
+  description: 'Premium Anime T-Shirts & Stickers - Discover premium anime-themed t-shirts, kawaii stickers, and limited edition merchandise. Express your otaku spirit with our curated collection.',
+  url: 'https://otaku-store-anime-hn95v39hq.cosmic.site',
+  ogImage: 'https://otaku-store-anime-hn95v39hq.cosmic.site/api/og'
 }
 
-// Generate base metadata that can be extended
+// Base metadata function for the root layout
 export function getBaseMetadata(): Metadata {
   return {
-    metadataBase: new URL(siteConfig.url),
     title: {
       default: siteConfig.name,
-      template: `%s | ${siteConfig.name}`,
+      template: `%s | ${siteConfig.name}`
     },
     description: siteConfig.description,
-    keywords: [
-      'anime',
-      'manga',
-      'otaku',
-      'merchandise',
-      't-shirts',
-      'stickers',
-      'collectibles',
-      'japanese',
-      'kawaii',
-      'cosplay',
-    ],
-    authors: [
-      {
-        name: siteConfig.name,
-        url: siteConfig.url,
-      },
-    ],
-    creator: siteConfig.creator,
+    metadataBase: new URL(siteConfig.url),
     openGraph: {
       type: 'website',
       locale: 'en_US',
       url: siteConfig.url,
+      siteName: siteConfig.name,
       title: siteConfig.name,
       description: siteConfig.description,
-      siteName: siteConfig.name,
       images: [
         {
           url: siteConfig.ogImage,
           width: 1200,
           height: 630,
-          alt: siteConfig.name,
-        },
-      ],
+          alt: `${siteConfig.name} - Premium Anime Merchandise`,
+          type: 'image/png',
+        }
+      ]
     },
     twitter: {
       card: 'summary_large_image',
       title: siteConfig.name,
       description: siteConfig.description,
-      images: [siteConfig.ogImage],
-      creator: siteConfig.creator,
+      images: [siteConfig.ogImage]
     },
-    icons: {
-      icon: '/favicon.ico',
-      shortcut: '/favicon-16x16.png',
-      apple: '/apple-touch-icon.png',
-    },
-    manifest: '/manifest.json',
+    alternates: {
+      canonical: siteConfig.url
+    }
   }
 }
 
-// Home page specific metadata
-export function getHomeMetadata(): Metadata {
+export function getHomeMetadata(productImageUrl?: string): Metadata {
+  // Use product image if available, otherwise use default OG route
+  const ogImageUrl = productImageUrl 
+    ? `${productImageUrl}?w=1200&h=630&fit=crop&auto=format,compress`
+    : `${siteConfig.url}/api/og`
+
   return {
-    title: 'Premium Anime Merchandise & Collectibles',
-    description: 'Discover the ultimate collection of anime merchandise. From exclusive t-shirts to limited edition collectibles, find your perfect otaku gear at Otaku Store.',
+    title: siteConfig.name,
+    description: siteConfig.description,
+    metadataBase: new URL(siteConfig.url),
     openGraph: {
-      title: 'Premium Anime Merchandise & Collectibles | Otaku Store',
-      description: 'Discover the ultimate collection of anime merchandise. From exclusive t-shirts to limited edition collectibles, find your perfect otaku gear.',
+      type: 'website',
+      locale: 'en_US',
       url: siteConfig.url,
+      siteName: siteConfig.name,
+      title: siteConfig.name,
+      description: siteConfig.description,
       images: [
         {
-          url: `${siteConfig.url}/og-home.jpg`,
+          url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: 'Otaku Store - Premium Anime Merchandise',
-        },
-      ],
-    },
-  }
-}
-
-// Products page metadata
-export function getProductsMetadata(): Metadata {
-  return {
-    title: 'All Products - Premium Anime Merchandise',
-    description: 'Browse our complete collection of premium anime merchandise. High-quality t-shirts, collectible stickers, and exclusive items for true otaku fans.',
-    openGraph: {
-      title: 'All Products - Premium Anime Merchandise | Otaku Store',
-      description: 'Browse our complete collection of premium anime merchandise. High-quality t-shirts, collectible stickers, and exclusive items.',
-      url: `${siteConfig.url}/products`,
-      images: [
-        {
-          url: `${siteConfig.url}/og-products.jpg`,
-          width: 1200,
-          height: 630,
-          alt: 'Otaku Store Products',
-        },
-      ],
-    },
-  }
-}
-
-// Product page metadata
-export function getProductMetadata(product: Product): Metadata {
-  const images = product.metadata.featured_image
-    ? [
-        {
-          url: `${product.metadata.featured_image.imgix_url}?w=1200&h=630&fit=crop&auto=format,compress`,
-          width: 1200,
-          height: 630,
-          alt: product.metadata.name,
-        },
+          alt: `${siteConfig.name} - Premium Anime Merchandise`,
+          type: 'image/png',
+        }
       ]
-    : [
-        {
-          url: `${siteConfig.url}/og-product-default.jpg`,
-          width: 1200,
-          height: 630,
-          alt: product.metadata.name,
-        },
-      ]
-
-  // Clean HTML from description for meta description
-  const cleanDescription = product.metadata.description
-    .replace(/<[^>]*>/g, '')
-    .replace(/&[^;]+;/g, ' ')
-    .trim()
-    .substring(0, 155)
-
-  return {
-    title: `${product.metadata.name} - ${product.metadata.category.metadata.name}`,
-    description: cleanDescription || `Premium ${product.metadata.category.metadata.name.toLowerCase()} featuring ${product.metadata.name}. Available now at Otaku Store.`,
-    openGraph: {
-      title: `${product.metadata.name} | Otaku Store`,
-      description: cleanDescription,
-      url: `${siteConfig.url}/products/${product.slug}`,
-      images,
-      type: 'product',
     },
     twitter: {
       card: 'summary_large_image',
-      title: product.metadata.name,
-      description: cleanDescription,
-      images: [images[0].url],
+      title: siteConfig.name,
+      description: siteConfig.description,
+      images: [ogImageUrl]
     },
+    alternates: {
+      canonical: siteConfig.url
+    }
   }
 }
 
-// Category page metadata
-export function getCategoryMetadata(categoryName: string, categorySlug: string): Metadata {
+export function getProductsMetadata(): Metadata {
+  const title = 'Premium Anime Products | Otaku Store'
+  const description = 'Browse our complete collection of premium anime merchandise including t-shirts, stickers, and collectibles. Find your perfect otaku gear.'
+  
   return {
-    title: `${categoryName} - Premium Anime Merchandise`,
-    description: `Shop our collection of premium anime ${categoryName.toLowerCase()}. High-quality designs and exclusive items for true otaku fans.`,
+    title,
+    description,
+    metadataBase: new URL(siteConfig.url),
     openGraph: {
-      title: `${categoryName} - Premium Anime Merchandise | Otaku Store`,
-      description: `Shop our collection of premium anime ${categoryName.toLowerCase()}. High-quality designs and exclusive items.`,
-      url: `${siteConfig.url}/categories/${categorySlug}`,
+      type: 'website',
+      locale: 'en_US',
+      url: `${siteConfig.url}/products`,
+      siteName: siteConfig.name,
+      title,
+      description,
       images: [
         {
-          url: `${siteConfig.url}/og-category-${categorySlug}.jpg`,
+          url: `${siteConfig.url}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`,
           width: 1200,
           height: 630,
-          alt: `${categoryName} at Otaku Store`,
-        },
-      ],
+          alt: title,
+          type: 'image/png',
+        }
+      ]
     },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${siteConfig.url}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`]
+    },
+    alternates: {
+      canonical: `${siteConfig.url}/products`
+    }
   }
 }
 
-// Structured data generators
+export function getProductMetadata(product: Product): Metadata {
+  const title = `${product.metadata.name} | Otaku Store`
+  const description = `${product.metadata.description.replace(/<[^>]*>/g, '').slice(0, 155)}...`
+  const productUrl = `${siteConfig.url}/products/${product.slug}`
+  
+  // Use the product's featured image for OG
+  const ogImage = product.metadata.featured_image?.imgix_url
+    ? `${product.metadata.featured_image.imgix_url}?w=1200&h=630&fit=crop&auto=format,compress`
+    : `${siteConfig.url}/api/og?title=${encodeURIComponent(product.metadata.name)}&description=${encodeURIComponent(description)}`
+
+  return {
+    title,
+    description,
+    metadataBase: new URL(siteConfig.url),
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: productUrl,
+      siteName: siteConfig.name,
+      title,
+      description,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: product.metadata.name,
+          type: 'image/png',
+        }
+      ]
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage]
+    },
+    alternates: {
+      canonical: productUrl
+    }
+  }
+}
+
+export function getCategoryMetadata(category: Category): Metadata {
+  const title = `${category.metadata.name} | Otaku Store`
+  const description = category.metadata.description || `Browse our ${category.metadata.name.toLowerCase()} collection of premium anime merchandise.`
+  const categoryUrl = `${siteConfig.url}/categories/${category.slug}`
+  
+  // Use category image if available, otherwise use default OG
+  const ogImage = category.metadata.category_image?.imgix_url
+    ? `${category.metadata.category_image.imgix_url}?w=1200&h=630&fit=crop&auto=format,compress`
+    : `${siteConfig.url}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`
+
+  return {
+    title,
+    description,
+    metadataBase: new URL(siteConfig.url),
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: categoryUrl,
+      siteName: siteConfig.name,
+      title,
+      description,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: title,
+          type: 'image/png',
+        }
+      ]
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage]
+    },
+    alternates: {
+      canonical: categoryUrl
+    }
+  }
+}
+
+// Organization structured data for the layout
 export function getOrganizationStructuredData() {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: siteConfig.name,
-    description: siteConfig.description,
-    url: siteConfig.url,
-    logo: `${siteConfig.url}/logo.png`,
-    sameAs: [
-      // Add social media URLs here when available
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": siteConfig.name,
+    "description": siteConfig.description,
+    "url": siteConfig.url,
+    "logo": `${siteConfig.url}/logo.png`,
+    "sameAs": [
+      "https://twitter.com/otaku_store",
+      "https://instagram.com/otaku_store"
     ],
-    contactPoint: {
-      '@type': 'ContactPoint',
-      contactType: 'customer service',
-      availableLanguage: 'English',
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Service",
+      "email": "support@otaku-store.com"
     },
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "US"
+    }
   }
 }
 
-export function getWebsiteStructuredData() {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: siteConfig.name,
-    description: siteConfig.description,
-    url: siteConfig.url,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: `${siteConfig.url}/products?search={search_term_string}`,
-      'query-input': 'required name=search_term_string',
-    },
-  }
-}
-
+// Structured Data Helpers
 export function getProductStructuredData(product: Product) {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.metadata.name,
-    description: product.metadata.description.replace(/<[^>]*>/g, '').trim(),
-    image: product.metadata.featured_image?.imgix_url,
-    sku: product.metadata.sku,
-    category: product.metadata.category.metadata.name,
-    offers: {
-      '@type': 'Offer',
-      price: product.metadata.price.toString(),
-      priceCurrency: 'USD',
-      availability: product.metadata.in_stock
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/OutOfStock',
-      url: `${siteConfig.url}/products/${product.slug}`,
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": product.metadata.name,
+    "image": product.metadata.featured_image?.imgix_url,
+    "description": product.metadata.description.replace(/<[^>]*>/g, ''),
+    "sku": product.metadata.sku,
+    "brand": {
+      "@type": "Brand",
+      "name": "Otaku Store"
     },
-    brand: {
-      '@type': 'Brand',
-      name: siteConfig.name,
+    "offers": {
+      "@type": "Offer",
+      "url": `${siteConfig.url}/products/${product.slug}`,
+      "priceCurrency": "USD",
+      "price": product.metadata.price,
+      "availability": product.metadata.in_stock 
+        ? "https://schema.org/InStock" 
+        : "https://schema.org/OutOfStock"
     },
+    "category": product.metadata.category.metadata.name
   }
 }
 
 export function getBreadcrumbStructuredData(items: Array<{ name: string; url?: string }>) {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: items.map((item, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: item.name,
-      ...(item.url && { item: `${siteConfig.url}${item.url}` }),
-    })),
-  }
-}
-
-export function getCollectionPageStructuredData(
-  name: string,
-  description: string,
-  url: string,
-  products: Product[]
-) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    name,
-    description,
-    url: `${siteConfig.url}${url}`,
-    mainEntity: {
-      '@type': 'ItemList',
-      numberOfItems: products.length,
-      itemListElement: products.map((product, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        item: {
-          '@type': 'Product',
-          name: product.metadata.name,
-          image: product.metadata.featured_image?.imgix_url,
-          offers: {
-            '@type': 'Offer',
-            price: product.metadata.price.toString(),
-            priceCurrency: 'USD',
-          },
-        },
-      })),
-    },
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": items.map((item, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "name": item.name,
+      ...(item.url && { "item": `${siteConfig.url}${item.url}` })
+    }))
   }
 }
