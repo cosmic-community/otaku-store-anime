@@ -1,22 +1,27 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next/dist/lib/metadata/types/metadata-interface'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { CartProvider } from '@/contexts/CartContext'
+import { defaultMetadata } from '@/lib/seo'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { CartProvider } from '@/contexts/CartContext'
-import { getBaseMetadata, getOrganizationStructuredData } from '@/lib/seo'
 import CosmicBadge from '@/components/CosmicBadge'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata: Metadata = getBaseMetadata()
+export const metadata: Metadata = defaultMetadata
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const organizationData = getOrganizationStructuredData()
   const bucketSlug = process.env.COSMIC_BUCKET_SLUG as string
 
   return (
@@ -39,15 +44,13 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <CartProvider>
-          <div className="min-h-screen flex flex-col">
+          <div className="flex flex-col min-h-screen">
             <Header />
-            <main className="flex-grow">
+            <main className="flex-1">
               {children}
             </main>
             <Footer />
           </div>
-          
-          {/* Cosmic Badge */}
           <CosmicBadge bucketSlug={bucketSlug} />
         </CartProvider>
       </body>
