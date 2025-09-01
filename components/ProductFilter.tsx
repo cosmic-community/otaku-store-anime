@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import type { Category, Tag } from '@/types'
 
 interface FilterOptions {
@@ -19,106 +19,66 @@ interface ProductFilterProps {
 }
 
 export default function ProductFilter({ onFilterChange, categories, tags, className = '' }: ProductFilterProps) {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100])
-  const [availability, setAvailability] = useState<'all' | 'in_stock' | 'out_of_stock'>('all')
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'price_low' | 'price_high' | 'name_asc' | 'name_desc'>('newest')
+  const [filters, setFilters] = useState<FilterOptions>({
+    categories: [],
+    tags: [],
+    priceRange: [0, 100],
+    availability: 'all',
+    sortBy: 'newest'
+  })
   const [isExpanded, setIsExpanded] = useState(false)
 
   // Apply filters whenever state changes
   useEffect(() => {
-    const filteredCategories = categories.filter(cat => selectedCategories.includes(cat.id))
-    const filteredTags = tags.filter(tag => selectedTags.includes(tag.id))
-    
-    onFilterChange({
-      categories: filteredCategories,
-      tags: filteredTags,
-      priceRange,
-      availability,
-      sortBy
-    })
-  }, [selectedCategories, selectedTags, priceRange, availability, sortBy, categories, tags, onFilterChange])
+    onFilterChange(filters)
+  }, [filters, onFilterChange])
 
-  const handleCategoryToggle = useCallback((categoryId: string, event: React.MouseEvent) => {
-    // Prevent event bubbling that might interfere with links
-    event.stopPropagation()
-    
-    setSelectedCategories(prev => 
-      prev.includes(categoryId) 
-        ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
-    )
-  }, [])
+  const updateFilter = <K extends keyof FilterOptions>(key: K, value: FilterOptions[K]) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+  }
 
-  const handleTagToggle = useCallback((tagId: string, event: React.MouseEvent) => {
-    // Prevent event bubbling
-    event.stopPropagation()
-    
-    setSelectedTags(prev => 
-      prev.includes(tagId) 
-        ? prev.filter(id => id !== tagId)
-        : [...prev, tagId]
-    )
-  }, [])
-
-  const handleClearFilters = useCallback((event: React.MouseEvent) => {
-    // Prevent event bubbling
-    event.stopPropagation()
-    
-    setSelectedCategories([])
-    setSelectedTags([])
-    setPriceRange([0, 100])
-    setAvailability('all')
-    setSortBy('newest')
-  }, [])
-
-  const handleSortChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
-    // Prevent event bubbling
-    event.stopPropagation()
-    setSortBy(event.target.value as FilterOptions['sortBy'])
-  }, [])
-
-  const handleAvailabilityChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    // Prevent event bubbling
-    event.stopPropagation()
-    setAvailability(event.target.value as FilterOptions['availability'])
-  }, [])
-
-  const handlePriceRangeChange = useCallback((type: 'min' | 'max', value: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    // Prevent event bubbling
-    event.stopPropagation()
-    
-    if (type === 'min') {
-      setPriceRange([value, priceRange[1]])
+  const toggleCategory = (category: Category) => {
+    const isSelected = filters.categories.some(cat => cat.id === category.id)
+    if (isSelected) {
+      updateFilter('categories', filters.categories.filter(cat => cat.id !== category.id))
     } else {
-      setPriceRange([priceRange[0], value])
+      updateFilter('categories', [...filters.categories, category])
     }
-  }, [priceRange])
+  }
 
-  const handleSliderChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    // Prevent event bubbling
-    event.stopPropagation()
-    setPriceRange([priceRange[0], parseInt(event.target.value)])
-  }, [priceRange])
+  const toggleTag = (tag: Tag) => {
+    const isSelected = filters.tags.some(t => t.id === tag.id)
+    if (isSelected) {
+      updateFilter('tags', filters.tags.filter(t => t.id !== tag.id))
+    } else {
+      updateFilter('tags', [...filters.tags, tag])
+    }
+  }
 
-  const toggleExpansion = useCallback((event: React.MouseEvent) => {
-    // Prevent event bubbling
-    event.stopPropagation()
-    setIsExpanded(!isExpanded)
-  }, [isExpanded])
+  const clearAllFilters = () => {
+    setFilters({
+      categories: [],
+      tags: [],
+      priceRange: [0, 100],
+      availability: 'all',
+      sortBy: 'newest'
+    })
+  }
 
-  const hasActiveFilters = selectedCategories.length > 0 || selectedTags.length > 0 || 
-    priceRange[0] > 0 || priceRange[1] < 100 || availability !== 'all'
+  const hasActiveFilters = filters.categories.length > 0 || 
+    filters.tags.length > 0 || 
+    filters.priceRange[0] > 0 || 
+    filters.priceRange[1] < 100 || 
+    filters.availability !== 'all'
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg shadow-sm relative ${className}`}>
-      {/* Mobile Toggle - Simplified */}
+    <div className={`bg-white border border-gray-200 rounded-lg shadow-sm ${className}`}>
+      {/* Mobile Toggle */}
       <div className="block lg:hidden">
         <button
           type="button"
-          onClick={toggleExpansion}
-          className="w-full px-4 py-3 flex items-center justify-between bg-white hover:bg-gray-50 rounded-t-lg border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 transition-colors"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full px-4 py-3 flex items-center justify-between bg-white hover:bg-gray-50 rounded-t-lg border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
         >
           <span className="font-medium text-gray-900 flex items-center">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,9 +93,7 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
               </span>
             )}
             <svg
-              className={`w-5 h-5 text-gray-500 transform transition-transform duration-200 ${
-                isExpanded ? 'rotate-180' : ''
-              }`}
+              className={`w-5 h-5 text-gray-500 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -146,32 +104,29 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
         </button>
       </div>
 
-      {/* Filter Content - Properly scoped */}
-      <div className={`${isExpanded ? 'block' : 'hidden'} lg:block bg-white rounded-b-lg lg:rounded-lg`}>
-        <div 
-          className="p-4 lg:p-6 space-y-6"
-          onClick={(e) => e.stopPropagation()} // Prevent click events from bubbling
-        >
-          {/* Clear Filters Button */}
+      {/* Filter Content */}
+      <div className={`${isExpanded ? 'block' : 'hidden'} lg:block`}>
+        <div className="p-4 lg:p-6 space-y-6">
+          {/* Clear Filters */}
           {hasActiveFilters && (
             <div className="flex justify-between items-center pb-4 border-b border-gray-200">
               <span className="text-sm font-medium text-gray-700">Active filters</span>
               <button
                 type="button"
-                onClick={handleClearFilters}
-                className="text-sm text-primary-600 hover:text-primary-700 font-medium focus:outline-none focus:underline transition-colors px-2 py-1 rounded"
+                onClick={clearAllFilters}
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium focus:outline-none"
               >
                 Clear all
               </button>
             </div>
           )}
 
-          {/* Sort By Section */}
+          {/* Sort By */}
           <div className="space-y-3">
             <h3 className="font-semibold text-gray-900">Sort by</h3>
             <select
-              value={sortBy}
-              onChange={handleSortChange}
+              value={filters.sortBy}
+              onChange={(e) => updateFilter('sortBy', e.target.value as FilterOptions['sortBy'])}
               className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="newest">Newest First</option>
@@ -183,74 +138,83 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
             </select>
           </div>
 
-          {/* Categories Section */}
+          {/* Categories */}
           {categories.length > 0 && (
             <div className="space-y-3">
               <h3 className="font-semibold text-gray-900">Categories</h3>
               <div className="space-y-2 max-h-40 overflow-y-auto">
-                {categories.map((category) => (
-                  <div 
-                    key={category.id} 
-                    className="flex items-center space-x-3 cursor-pointer group p-1 rounded hover:bg-gray-50"
-                    onClick={(e) => handleCategoryToggle(category.id, e)}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(category.id)}
-                      onChange={() => {}} // Controlled by parent click
-                      className="w-4 h-4 text-primary-600 bg-white border-gray-300 rounded focus:ring-primary-500 focus:ring-2 pointer-events-none"
-                    />
-                    <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors select-none">
-                      {category.metadata?.name || category.title}
-                    </span>
-                  </div>
-                ))}
+                {categories.map((category) => {
+                  const isSelected = filters.categories.some(cat => cat.id === category.id)
+                  return (
+                    <div key={category.id} className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        id={`category-${category.id}`}
+                        checked={isSelected}
+                        onChange={() => toggleCategory(category)}
+                        className="w-4 h-4 text-primary-600 bg-white border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                      />
+                      <label
+                        htmlFor={`category-${category.id}`}
+                        className="text-sm text-gray-700 cursor-pointer select-none"
+                      >
+                        {category.metadata?.name || category.title}
+                      </label>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
 
-          {/* Tags Section */}
+          {/* Tags */}
           {tags.length > 0 && (
             <div className="space-y-3">
               <h3 className="font-semibold text-gray-900">Tags</h3>
               <div className="space-y-2 max-h-32 overflow-y-auto">
-                {tags.map((tag) => (
-                  <div 
-                    key={tag.id} 
-                    className="flex items-center space-x-3 cursor-pointer group p-1 rounded hover:bg-gray-50"
-                    onClick={(e) => handleTagToggle(tag.id, e)}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedTags.includes(tag.id)}
-                      onChange={() => {}} // Controlled by parent click
-                      className="w-4 h-4 text-primary-600 bg-white border-gray-300 rounded focus:ring-primary-500 focus:ring-2 pointer-events-none"
-                    />
-                    <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors select-none">
-                      {tag.metadata?.name || tag.title}
-                    </span>
-                  </div>
-                ))}
+                {tags.map((tag) => {
+                  const isSelected = filters.tags.some(t => t.id === tag.id)
+                  return (
+                    <div key={tag.id} className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        id={`tag-${tag.id}`}
+                        checked={isSelected}
+                        onChange={() => toggleTag(tag)}
+                        className="w-4 h-4 text-primary-600 bg-white border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                      />
+                      <label
+                        htmlFor={`tag-${tag.id}`}
+                        className="text-sm text-gray-700 cursor-pointer select-none"
+                      >
+                        {tag.metadata?.name || tag.title}
+                      </label>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
 
-          {/* Price Range Section */}
+          {/* Price Range */}
           <div className="space-y-3">
             <h3 className="font-semibold text-gray-900">Price Range</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>${priceRange[0]}</span>
-                <span>${priceRange[1]}</span>
+                <span>${filters.priceRange[0]}</span>
+                <span>${filters.priceRange[1]}</span>
               </div>
               
               <input
                 type="range"
                 min="0"
                 max="100"
-                value={priceRange[1]}
-                onChange={handleSliderChange}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                value={filters.priceRange[1]}
+                onChange={(e) => updateFilter('priceRange', [filters.priceRange[0], parseInt(e.target.value)])}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                style={{
+                  background: `linear-gradient(to right, #dc2626 0%, #dc2626 ${filters.priceRange[1]}%, #e5e7eb ${filters.priceRange[1]}%, #e5e7eb 100%)`
+                }}
               />
               
               <div className="grid grid-cols-2 gap-3">
@@ -258,9 +222,12 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
                   <label className="block text-xs font-medium text-gray-700 mb-1">Min</label>
                   <input
                     type="number"
-                    value={priceRange[0]}
-                    onChange={(e) => handlePriceRangeChange('min', parseInt(e.target.value) || 0, e)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    value={filters.priceRange[0]}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 0
+                      updateFilter('priceRange', [value, filters.priceRange[1]])
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     min="0"
                     max="100"
                   />
@@ -269,9 +236,12 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
                   <label className="block text-xs font-medium text-gray-700 mb-1">Max</label>
                   <input
                     type="number"
-                    value={priceRange[1]}
-                    onChange={(e) => handlePriceRangeChange('max', parseInt(e.target.value) || 100, e)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    value={filters.priceRange[1]}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 100
+                      updateFilter('priceRange', [filters.priceRange[0], value])
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     min="0"
                     max="100"
                   />
@@ -280,7 +250,7 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
             </div>
           </div>
 
-          {/* Availability Section */}
+          {/* Availability */}
           <div className="space-y-3">
             <h3 className="font-semibold text-gray-900">Availability</h3>
             <div className="space-y-2">
@@ -289,31 +259,51 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
                 { value: 'in_stock', label: 'In Stock' },
                 { value: 'out_of_stock', label: 'Out of Stock' }
               ].map(({ value, label }) => (
-                <div 
-                  key={value} 
-                  className="flex items-center space-x-3 cursor-pointer group p-1 rounded hover:bg-gray-50"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setAvailability(value as FilterOptions['availability'])
-                  }}
-                >
+                <div key={value} className="flex items-center space-x-3">
                   <input
                     type="radio"
                     name="availability"
+                    id={`availability-${value}`}
                     value={value}
-                    checked={availability === value}
-                    onChange={() => {}} // Controlled by parent click
-                    className="w-4 h-4 text-primary-600 bg-white border-gray-300 focus:ring-primary-500 focus:ring-2 pointer-events-none"
+                    checked={filters.availability === value}
+                    onChange={(e) => updateFilter('availability', e.target.value as FilterOptions['availability'])}
+                    className="w-4 h-4 text-primary-600 bg-white border-gray-300 focus:ring-primary-500 focus:ring-2"
                   />
-                  <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors select-none">
+                  <label
+                    htmlFor={`availability-${value}`}
+                    className="text-sm text-gray-700 cursor-pointer select-none"
+                  >
                     {label}
-                  </span>
+                  </label>
                 </div>
               ))}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Custom styles for slider */}
+      <style jsx>{`
+        .slider::-webkit-slider-thumb {
+          appearance: none;
+          height: 20px;
+          width: 20px;
+          border-radius: 50%;
+          background: #dc2626;
+          cursor: pointer;
+          border: 2px solid #ffffff;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .slider::-moz-range-thumb {
+          height: 20px;
+          width: 20px;
+          border-radius: 50%;
+          background: #dc2626;
+          cursor: pointer;
+          border: 2px solid #ffffff;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+      `}</style>
     </div>
   )
 }
