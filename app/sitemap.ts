@@ -3,6 +3,22 @@ import { getProducts, getCategories } from '@/lib/cosmic'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://otaku-store.vercel.app'
 
+// Helper function to safely create a Date object
+function createSafeDate(dateString?: string): Date {
+  if (!dateString) {
+    return new Date()
+  }
+  
+  const date = new Date(dateString)
+  
+  // Check if the date is valid
+  if (isNaN(date.getTime())) {
+    return new Date()
+  }
+  
+  return date
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const [products, categories] = await Promise.all([
@@ -12,14 +28,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const productUrls = products.map((product) => ({
       url: `${BASE_URL}/products/${product.slug}`,
-      lastModified: new Date(product.modified_at),
+      lastModified: createSafeDate(product.modified_at || product.created_at),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     }))
 
     const categoryUrls = categories.map((category) => ({
       url: `${BASE_URL}/categories/${category.slug}`,
-      lastModified: new Date(category.modified_at || category.created_at),
+      lastModified: createSafeDate(category.modified_at || category.created_at),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     }))
