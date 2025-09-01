@@ -25,6 +25,15 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
 
   const currentImage = allImages[currentImageIndex]
 
+  // Safety check for currentImage
+  if (!currentImage) {
+    return (
+      <div className="aspect-square bg-secondary-100 rounded-lg flex items-center justify-center">
+        <span className="text-secondary-500">Image not found</span>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {/* Main Image */}
