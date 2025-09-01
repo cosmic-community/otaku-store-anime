@@ -78,12 +78,12 @@ export default async function ProductsPage() {
                 <span className="text-xl font-bold text-yellow-400">
                   ${featuredProduct.metadata.price ? featuredProduct.metadata.price.toFixed(2) : '0.00'}
                 </span>
-                {featuredProduct.metadata.tags && featuredProduct.metadata.tags.length > 0 && featuredProduct.metadata.tags[0]?.metadata && (
+                {featuredProduct.metadata.tags && featuredProduct.metadata.tags.length > 0 && featuredProduct.metadata.tags[0]?.metadata?.name && (
                   <span
                     className="text-xs px-2 py-1 rounded-full text-white font-medium"
                     style={{ backgroundColor: featuredProduct.metadata.tags[0].metadata.color || '#6B7280' }}
                   >
-                    {featuredProduct.metadata.tags[0].metadata.name || featuredProduct.metadata.tags[0].title}
+                    {featuredProduct.metadata.tags[0].metadata.name}
                   </span>
                 )}
               </div>

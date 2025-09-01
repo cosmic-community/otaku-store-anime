@@ -16,20 +16,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Get bucket slug for the CosmicBadge component
+  // Access environment variable on server side
   const bucketSlug = process.env.COSMIC_BUCKET_SLUG as string
 
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className="scroll-smooth">
+      <body className={`${inter.className} antialiased`}>
         <CartProvider>
           <div className="min-h-screen flex flex-col">
             <Header />
-            <main className="flex-1">
-              {children}
-            </main>
+            <main className="flex-1">{children}</main>
             <Footer />
           </div>
+          {/* Pass bucket slug as prop to client component */}
           <CosmicBadge bucketSlug={bucketSlug} />
         </CartProvider>
       </body>
