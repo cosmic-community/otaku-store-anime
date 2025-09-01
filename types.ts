@@ -66,6 +66,20 @@ export interface NewsletterSubscriber extends CosmicObject {
   };
 }
 
+// Cart item type (for shopping cart functionality)
+export interface CartItem {
+  id: string;
+  product: Product;
+  quantity: number;
+}
+
+// Cart state interface
+export interface CartState {
+  items: CartItem[];
+  total: number;
+  itemCount: number;
+}
+
 // API response types
 export interface CosmicResponse<T> {
   objects: T[];
@@ -100,4 +114,14 @@ export interface CategoryCardProps {
 
 export interface NewsletterFormData {
   email: string;
+}
+
+// Cart-related prop types
+export interface CartIconProps {
+  onClick: () => void;
+}
+
+export interface CartDrawerProps {
+  isOpen: boolean;
+  onClose: () => void;
 }
