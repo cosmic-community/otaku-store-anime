@@ -29,7 +29,7 @@ export default async function ProductsPage() {
       </div>
 
       {/* Products Section */}
-      <ProductsClient initialProducts={products} categories={categories} />
+      {/*<ProductsClient initialProducts={products} categories={categories} />*/}
       
       {/* Newsletter Section */}
       <NewsletterSignup />
