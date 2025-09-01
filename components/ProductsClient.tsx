@@ -17,6 +17,15 @@ interface FilterState {
   inStock: boolean | null
 }
 
+// Define FilterOptions to match what ProductFilter expects
+interface FilterOptions {
+  categories: Category[]
+  tags: any[] // Using any[] for tags since we don't have a Tag type defined
+  priceRange: [number, number]
+  availability: 'all' | 'in_stock' | 'out_of_stock'
+  sortBy: 'newest' | 'oldest' | 'price_low' | 'price_high' | 'name_asc' | 'name_desc'
+}
+
 export default function ProductsClient({ initialProducts, categories }: ProductsClientProps) {
   const [filters, setFilters] = useState<FilterState>({
     category: null,
@@ -98,8 +107,16 @@ export default function ProductsClient({ initialProducts, categories }: Products
     }
   }, [filteredProducts, sortBy])
 
-  // Handle filter changes
-  const handleFilterChange = (newFilters: FilterState) => {
+  // Handle filter changes - convert FilterOptions to FilterState
+  const handleFilterChange = (filterOptions: FilterOptions) => {
+    // Convert FilterOptions back to our internal FilterState format
+    const newFilters: FilterState = {
+      category: filterOptions.categories.length > 0 ? filterOptions.categories[0].slug : null,
+      tags: [], // We'll need to handle tags separately if needed
+      priceRange: filterOptions.priceRange,
+      inStock: filterOptions.availability === 'in_stock' ? true : 
+               filterOptions.availability === 'out_of_stock' ? false : null
+    }
     setFilters(newFilters)
   }
 
@@ -133,9 +150,7 @@ export default function ProductsClient({ initialProducts, categories }: Products
             
             <ProductFilter
               categories={categories}
-              products={initialProducts}
-              filters={filters}
-              priceRange={priceRange}
+              tags={[]} // Empty array for now since we don't have tags properly set up
               onFilterChange={handleFilterChange}
             />
           </div>

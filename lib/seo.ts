@@ -70,6 +70,49 @@ export function getBaseMetadata(): Metadata {
   }
 }
 
+export function getProductsMetadata(): Metadata {
+  const title = 'Premium Anime Merchandise - Shop Otaku Store'
+  const description = 'Browse our curated collection of high-quality anime t-shirts, kawaii stickers, and exclusive limited edition merchandise. Express your otaku spirit with premium gear.'
+
+  return {
+    title,
+    description,
+    keywords: [
+      'anime merchandise',
+      'otaku store', 
+      'anime t-shirts',
+      'kawaii stickers',
+      'limited edition anime',
+      'manga merch',
+      'anime clothing',
+      'japanese culture',
+      'anime gifts',
+      'cosplay accessories'
+    ],
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: `${SITE_URL}/products`,
+      images: [
+        {
+          url: `${SITE_URL}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&type=products`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+      siteName: SITE_NAME,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${SITE_URL}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&type=products`],
+    },
+  }
+}
+
 export function getProductMetadata(product: Product): Metadata {
   const title = `${product.metadata.name} - ${product.metadata.category.metadata.name}`
   const description = product.metadata.description.replace(/<[^>]*>/g, '').substring(0, 155) + '...'
