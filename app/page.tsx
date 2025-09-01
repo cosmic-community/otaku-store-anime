@@ -1,18 +1,19 @@
-import { getProducts, getCategories } from '@/lib/cosmic'
+import type { Metadata } from 'next'
 import Hero from '@/components/Hero'
 import ProductCard from '@/components/ProductCard'
 import CategoryCard from '@/components/CategoryCard'
 import NewsletterSignup from '@/components/NewsletterSignup'
-import Link from 'next/link'
-import type { Metadata } from 'next'
-import { getBaseMetadata, getBreadcrumbStructuredData } from '@/lib/seo'
+import { getProducts, getCategories } from '@/lib/cosmic'
+import { getHomeMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  ...getBaseMetadata({
-    title: 'Otaku Store - Premium Anime T-Shirts & Stickers',
-    description: 'Discover premium anime-themed t-shirts, kawaii stickers, and limited edition merchandise. Express your otaku spirit with our curated collection.',
-    ogType: 'home'
-  }),
+export async function generateMetadata(): Promise<Metadata> {
+  // Get the first featured product for OG image
+  const products = await getProducts()
+  const featuredProduct = products.find(p => 
+    p.metadata?.tags?.some(tag => tag.slug === 'best-seller')
+  ) || products[0] // Fallback to first product if no best seller
+
+  return getHomeMetadata(featuredProduct?.metadata?.featured_image?.imgix_url)
 }
 
 export default async function HomePage() {
@@ -20,37 +21,45 @@ export default async function HomePage() {
     getProducts(),
     getCategories()
   ])
-
-  // Get featured products (first 6)
+  
+  // Get featured products (limit to 6 for display)
   const featuredProducts = products.slice(0, 6)
-
-  // Generate breadcrumb structured data
-  const breadcrumbData = getBreadcrumbStructuredData([
-    { name: 'Home' }
-  ])
-
+  
   return (
-    <>
-      {/* Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbData)
-        }}
-      />
-
+    <main>
       <Hero />
       
-      {/* Featured Categories */}
-      <section className="py-16 bg-gray-50">
+      {/* Featured Products */}
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-secondary-900 mb-4">Shop by Category</h2>
-            <p className="text-lg text-secondary-600 max-w-2xl mx-auto">
-              Explore our curated collections of premium anime merchandise
-            </p>
+          <h2 className="text-3xl font-bold text-center text-secondary-900 mb-12">
+            Featured Products
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
           </div>
-          
+          <div className="text-center mt-12">
+            <a
+              href="/products"
+              className="inline-flex items-center px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              View All Products
+              <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="py-16 bg-secondary-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center text-secondary-900 mb-12">
+            Shop by Category
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {categories.map((category) => (
               <CategoryCard key={category.id} category={category} />
@@ -58,35 +67,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Featured Products */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-secondary-900 mb-4">Featured Products</h2>
-            <p className="text-lg text-secondary-600 max-w-2xl mx-auto">
-              Discover our most popular anime-themed merchandise
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-          
-          <div className="text-center mt-12">
-            <Link 
-              href="/products"
-              className="inline-block bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
-            >
-              View All Products
-            </Link>
-          </div>
-        </div>
-      </section>
-
+      
       <NewsletterSignup />
-    </>
+    </main>
   )
 }
