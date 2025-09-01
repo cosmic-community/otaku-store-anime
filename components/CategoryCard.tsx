@@ -7,54 +7,55 @@ interface CategoryCardProps {
 }
 
 export default function CategoryCard({ category, className = '' }: CategoryCardProps) {
-  const categoryImage = category.metadata.category_image
+  const { metadata } = category
+  
+  if (!metadata) return null
 
   return (
-    <Link 
-      href={`/categories/${category.slug}`} 
-      className={`card hover:shadow-lg transition-all duration-200 group ${className}`}
-    >
-      {/* Category Image */}
-      {categoryImage && (
-        <div className="relative overflow-hidden h-48">
-          <img
-            src={`${categoryImage.imgix_url}?w=600&h=400&fit=crop&auto=format,compress`}
-            alt={category.metadata.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            width={300}
-            height={192}
-          />
-          <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors" />
-          
-          {/* Category Info Overlay */}
-          <div className="absolute inset-0 flex items-center justify-center text-center p-6">
+    <Link href={`/categories/${category.slug}`} className={`group block ${className}`}>
+      <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        {/* Category Image */}
+        <div className="aspect-video overflow-hidden bg-gradient-to-br from-primary-400 to-primary-600">
+          {metadata.category_image?.imgix_url ? (
+            <img
+              src={`${metadata.category_image.imgix_url}?w=800&h=450&fit=crop&auto=format,compress`}
+              alt={metadata.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+              width={400}
+              height={225}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-white">
+              <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+              </svg>
+            </div>
+          )}
+        </div>
+
+        {/* Category Info */}
+        <div className="p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-white mb-2">
-                {category.metadata.name}
+              <h3 className="text-xl font-semibold text-secondary-900 mb-2 group-hover:text-primary-600 transition-colors">
+                {metadata.name}
               </h3>
-              {category.metadata.description && (
-                <p className="text-white/90 text-sm">
-                  {category.metadata.description}
+              {metadata.description && (
+                <p className="text-secondary-600 line-clamp-2">
+                  {metadata.description}
                 </p>
               )}
             </div>
+            
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
           </div>
         </div>
-      )}
-      
-      {/* Fallback without image */}
-      {!categoryImage && (
-        <div className="p-6 text-center bg-gradient-to-br from-primary-500 to-primary-600 text-white">
-          <h3 className="text-2xl font-bold mb-2">
-            {category.metadata.name}
-          </h3>
-          {category.metadata.description && (
-            <p className="text-primary-100 text-sm">
-              {category.metadata.description}
-            </p>
-          )}
-        </div>
-      )}
+      </div>
     </Link>
   )
 }
