@@ -48,7 +48,7 @@ export default function Hero({ featuredProducts = [] }: HeroProps) {
       <div className="relative bg-gradient-to-br from-primary-600 to-primary-800 text-white overflow-hidden">
         <div className="relative z-10 container mx-auto px-4 py-24 lg:py-32">
           <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+            <h1 className="text-white text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
               Premium Anime
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
                 Merchandise
@@ -89,7 +89,7 @@ export default function Hero({ featuredProducts = [] }: HeroProps) {
       <div className="relative z-10 container mx-auto px-4 py-24 lg:py-32">
         <div className="text-center max-w-4xl mx-auto">
           {/* Main Heading */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+          <h1 className="text-white text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
             Premium Anime
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 drop-shadow-lg">
               Merchandise

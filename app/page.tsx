@@ -35,8 +35,8 @@ export default async function Home() {
       />
 
       <main className="min-h-screen">
-        {/* Hero Section */}
-        <Hero />
+        {/* Hero Section - Pass featured products for background images */}
+        <Hero featuredProducts={featuredProducts} />
 
         {/* Featured Products Section */}
         {featuredProducts.length > 0 && (

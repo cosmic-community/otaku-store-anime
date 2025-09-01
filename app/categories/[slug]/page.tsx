@@ -111,7 +111,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             </nav>
 
             <div className="text-center max-w-3xl mx-auto">
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+              <h1 className="text-white text-4xl md:text-6xl font-bold mb-6 leading-tight">
                 {category.metadata.name}
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
                   Collection
