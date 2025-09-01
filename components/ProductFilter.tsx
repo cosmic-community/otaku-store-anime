@@ -19,12 +19,12 @@ interface ProductFilterProps {
 }
 
 export default function ProductFilter({ onFilterChange, categories, tags, className = '' }: ProductFilterProps) {
-  const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100])
   const [availability, setAvailability] = useState<'all' | 'in_stock' | 'out_of_stock'>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'price_low' | 'price_high' | 'name_asc' | 'name_desc'>('newest')
+  const [isExpanded, setIsExpanded] = useState(false)
 
   // Apply filters whenever state changes
   useEffect(() => {
@@ -40,7 +40,10 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
     })
   }, [selectedCategories, selectedTags, priceRange, availability, sortBy, categories, tags, onFilterChange])
 
-  const handleCategoryToggle = useCallback((categoryId: string) => {
+  const handleCategoryToggle = useCallback((categoryId: string, event: React.MouseEvent) => {
+    // Prevent event bubbling that might interfere with links
+    event.stopPropagation()
+    
     setSelectedCategories(prev => 
       prev.includes(categoryId) 
         ? prev.filter(id => id !== categoryId)
@@ -48,7 +51,10 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
     )
   }, [])
 
-  const handleTagToggle = useCallback((tagId: string) => {
+  const handleTagToggle = useCallback((tagId: string, event: React.MouseEvent) => {
+    // Prevent event bubbling
+    event.stopPropagation()
+    
     setSelectedTags(prev => 
       prev.includes(tagId) 
         ? prev.filter(id => id !== tagId)
@@ -56,7 +62,10 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
     )
   }, [])
 
-  const handleClearFilters = useCallback(() => {
+  const handleClearFilters = useCallback((event: React.MouseEvent) => {
+    // Prevent event bubbling
+    event.stopPropagation()
+    
     setSelectedCategories([])
     setSelectedTags([])
     setPriceRange([0, 100])
@@ -64,19 +73,52 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
     setSortBy('newest')
   }, [])
 
+  const handleSortChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+    // Prevent event bubbling
+    event.stopPropagation()
+    setSortBy(event.target.value as FilterOptions['sortBy'])
+  }, [])
+
+  const handleAvailabilityChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    // Prevent event bubbling
+    event.stopPropagation()
+    setAvailability(event.target.value as FilterOptions['availability'])
+  }, [])
+
+  const handlePriceRangeChange = useCallback((type: 'min' | 'max', value: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    // Prevent event bubbling
+    event.stopPropagation()
+    
+    if (type === 'min') {
+      setPriceRange([value, priceRange[1]])
+    } else {
+      setPriceRange([priceRange[0], value])
+    }
+  }, [priceRange])
+
+  const handleSliderChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    // Prevent event bubbling
+    event.stopPropagation()
+    setPriceRange([priceRange[0], parseInt(event.target.value)])
+  }, [priceRange])
+
+  const toggleExpansion = useCallback((event: React.MouseEvent) => {
+    // Prevent event bubbling
+    event.stopPropagation()
+    setIsExpanded(!isExpanded)
+  }, [isExpanded])
+
   const hasActiveFilters = selectedCategories.length > 0 || selectedTags.length > 0 || 
     priceRange[0] > 0 || priceRange[1] < 100 || availability !== 'all'
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg shadow-sm ${className}`}>
-      {/* Mobile Toggle Button */}
-      <div className="lg:hidden">
+    <div className={`bg-white border border-gray-200 rounded-lg shadow-sm relative ${className}`}>
+      {/* Mobile Toggle - Simplified */}
+      <div className="block lg:hidden">
         <button
           type="button"
-          onClick={() => setIsMobileOpen(!isMobileOpen)}
-          className="w-full flex items-center justify-between p-4 text-left bg-white rounded-t-lg border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
-          aria-expanded={isMobileOpen}
-          aria-controls="mobile-filter-panel"
+          onClick={toggleExpansion}
+          className="w-full px-4 py-3 flex items-center justify-between bg-white hover:bg-gray-50 rounded-t-lg border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 transition-colors"
         >
           <span className="font-medium text-gray-900 flex items-center">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,7 +134,7 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
             )}
             <svg
               className={`w-5 h-5 text-gray-500 transform transition-transform duration-200 ${
-                isMobileOpen ? 'rotate-180' : ''
+                isExpanded ? 'rotate-180' : ''
               }`}
               fill="none"
               stroke="currentColor"
@@ -104,98 +146,96 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
         </button>
       </div>
 
-      {/* Filter Content */}
-      <div
-        id="mobile-filter-panel"
-        className={`
-          ${isMobileOpen ? 'block' : 'hidden'} lg:block
-          bg-white rounded-b-lg lg:rounded-lg
-        `}
-      >
-        <div className="p-4 lg:p-6 space-y-6">
-          {/* Clear Filters */}
+      {/* Filter Content - Properly scoped */}
+      <div className={`${isExpanded ? 'block' : 'hidden'} lg:block bg-white rounded-b-lg lg:rounded-lg`}>
+        <div 
+          className="p-4 lg:p-6 space-y-6"
+          onClick={(e) => e.stopPropagation()} // Prevent click events from bubbling
+        >
+          {/* Clear Filters Button */}
           {hasActiveFilters && (
             <div className="flex justify-between items-center pb-4 border-b border-gray-200">
-              <span className="text-sm font-medium text-gray-700">Active filters applied</span>
+              <span className="text-sm font-medium text-gray-700">Active filters</span>
               <button
                 type="button"
                 onClick={handleClearFilters}
-                className="text-sm text-primary-600 hover:text-primary-700 font-medium focus:outline-none focus:underline transition-colors"
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium focus:outline-none focus:underline transition-colors px-2 py-1 rounded"
               >
                 Clear all
               </button>
             </div>
           )}
 
-          {/* Sort By */}
+          {/* Sort By Section */}
           <div className="space-y-3">
             <h3 className="font-semibold text-gray-900">Sort by</h3>
-            <div className="relative">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as FilterOptions['sortBy'])}
-                className="w-full appearance-none bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="price_low">Price: Low to High</option>
-                <option value="price_high">Price: High to Low</option>
-                <option value="name_asc">Name: A to Z</option>
-                <option value="name_desc">Name: Z to A</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                </svg>
-              </div>
-            </div>
+            <select
+              value={sortBy}
+              onChange={handleSortChange}
+              className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="price_low">Price: Low to High</option>
+              <option value="price_high">Price: High to Low</option>
+              <option value="name_asc">Name: A to Z</option>
+              <option value="name_desc">Name: Z to A</option>
+            </select>
           </div>
 
-          {/* Categories */}
+          {/* Categories Section */}
           {categories.length > 0 && (
             <div className="space-y-3">
               <h3 className="font-semibold text-gray-900">Categories</h3>
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {categories.map((category) => (
-                  <label key={category.id} className="flex items-center space-x-3 cursor-pointer group">
+                  <div 
+                    key={category.id} 
+                    className="flex items-center space-x-3 cursor-pointer group p-1 rounded hover:bg-gray-50"
+                    onClick={(e) => handleCategoryToggle(category.id, e)}
+                  >
                     <input
                       type="checkbox"
                       checked={selectedCategories.includes(category.id)}
-                      onChange={() => handleCategoryToggle(category.id)}
-                      className="w-4 h-4 text-primary-600 bg-white border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                      onChange={() => {}} // Controlled by parent click
+                      className="w-4 h-4 text-primary-600 bg-white border-gray-300 rounded focus:ring-primary-500 focus:ring-2 pointer-events-none"
                     />
-                    <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
+                    <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors select-none">
                       {category.metadata?.name || category.title}
                     </span>
-                  </label>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Tags */}
+          {/* Tags Section */}
           {tags.length > 0 && (
             <div className="space-y-3">
               <h3 className="font-semibold text-gray-900">Tags</h3>
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {tags.map((tag) => (
-                  <label key={tag.id} className="flex items-center space-x-3 cursor-pointer group">
+                  <div 
+                    key={tag.id} 
+                    className="flex items-center space-x-3 cursor-pointer group p-1 rounded hover:bg-gray-50"
+                    onClick={(e) => handleTagToggle(tag.id, e)}
+                  >
                     <input
                       type="checkbox"
                       checked={selectedTags.includes(tag.id)}
-                      onChange={() => handleTagToggle(tag.id)}
-                      className="w-4 h-4 text-primary-600 bg-white border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                      onChange={() => {}} // Controlled by parent click
+                      className="w-4 h-4 text-primary-600 bg-white border-gray-300 rounded focus:ring-primary-500 focus:ring-2 pointer-events-none"
                     />
-                    <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
+                    <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors select-none">
                       {tag.metadata?.name || tag.title}
                     </span>
-                  </label>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Price Range */}
+          {/* Price Range Section */}
           <div className="space-y-3">
             <h3 className="font-semibold text-gray-900">Price Range</h3>
             <div className="space-y-4">
@@ -209,9 +249,8 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
                 min="0"
                 max="100"
                 value={priceRange[1]}
-                onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                aria-label="Maximum price"
+                onChange={handleSliderChange}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
               />
               
               <div className="grid grid-cols-2 gap-3">
@@ -220,7 +259,7 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
                   <input
                     type="number"
                     value={priceRange[0]}
-                    onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
+                    onChange={(e) => handlePriceRangeChange('min', parseInt(e.target.value) || 0, e)}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     min="0"
                     max="100"
@@ -231,7 +270,7 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
                   <input
                     type="number"
                     value={priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 100])}
+                    onChange={(e) => handlePriceRangeChange('max', parseInt(e.target.value) || 100, e)}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     min="0"
                     max="100"
@@ -241,7 +280,7 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
             </div>
           </div>
 
-          {/* Availability */}
+          {/* Availability Section */}
           <div className="space-y-3">
             <h3 className="font-semibold text-gray-900">Availability</h3>
             <div className="space-y-2">
@@ -250,19 +289,26 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
                 { value: 'in_stock', label: 'In Stock' },
                 { value: 'out_of_stock', label: 'Out of Stock' }
               ].map(({ value, label }) => (
-                <label key={value} className="flex items-center space-x-3 cursor-pointer group">
+                <div 
+                  key={value} 
+                  className="flex items-center space-x-3 cursor-pointer group p-1 rounded hover:bg-gray-50"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setAvailability(value as FilterOptions['availability'])
+                  }}
+                >
                   <input
                     type="radio"
                     name="availability"
                     value={value}
                     checked={availability === value}
-                    onChange={(e) => setAvailability(e.target.value as FilterOptions['availability'])}
-                    className="w-4 h-4 text-primary-600 bg-white border-gray-300 focus:ring-primary-500 focus:ring-2"
+                    onChange={() => {}} // Controlled by parent click
+                    className="w-4 h-4 text-primary-600 bg-white border-gray-300 focus:ring-primary-500 focus:ring-2 pointer-events-none"
                   />
-                  <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
+                  <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors select-none">
                     {label}
                   </span>
-                </label>
+                </div>
               ))}
             </div>
           </div>
