@@ -142,7 +142,7 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
           {categories.length > 0 && (
             <div className="space-y-3">
               <h3 className="font-semibold text-gray-900">Categories</h3>
-              <div className="space-y-2 max-h-40 overflow-y-auto">
+              <div className="space-y-2 max-h-40 overflow-y-auto pl-1">
                 {categories.map((category) => {
                   const isSelected = filters.categories.some(cat => cat.id === category.id)
                   return (
@@ -171,7 +171,7 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
           {tags.length > 0 && (
             <div className="space-y-3">
               <h3 className="font-semibold text-gray-900">Tags</h3>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
+              <div className="space-y-2 max-h-32 overflow-y-auto pl-1">
                 {tags.map((tag) => {
                   const isSelected = filters.tags.some(t => t.id === tag.id)
                   return (
@@ -253,7 +253,7 @@ export default function ProductFilter({ onFilterChange, categories, tags, classN
           {/* Availability */}
           <div className="space-y-3">
             <h3 className="font-semibold text-gray-900">Availability</h3>
-            <div className="space-y-2">
+            <div className="space-y-2 pl-1">
               {[
                 { value: 'all', label: 'All Products' },
                 { value: 'in_stock', label: 'In Stock' },
