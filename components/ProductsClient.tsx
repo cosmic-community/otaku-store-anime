@@ -110,8 +110,11 @@ export default function ProductsClient({ initialProducts, categories }: Products
   // Handle filter changes - convert FilterOptions to FilterState
   const handleFilterChange = (filterOptions: FilterOptions) => {
     // Convert FilterOptions back to our internal FilterState format
+    // Fix for TypeScript error: Add explicit check for first category
+    const firstCategory = filterOptions.categories.length > 0 ? filterOptions.categories[0] : null
+    
     const newFilters: FilterState = {
-      category: filterOptions.categories.length > 0 ? filterOptions.categories[0].slug : null,
+      category: firstCategory ? firstCategory.slug : null,
       tags: [], // We'll need to handle tags separately if needed
       priceRange: filterOptions.priceRange,
       inStock: filterOptions.availability === 'in_stock' ? true : 
