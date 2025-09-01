@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import ProductCard from '@/components/ProductCard'
-import ProductFilter from '@/components/ProductFilter'
+import ProductCard from './ProductCard'
+import ProductFilter from './ProductFilter'
 import type { Product, Category } from '@/types'
 
 interface ProductsClientProps {
@@ -22,84 +22,65 @@ export default function ProductsClient({ products, categories }: ProductsClientP
     category: null,
     tags: [],
     priceRange: [0, 100],
-    inStock: null,
+    inStock: null
   })
 
-  const [sortBy, setSortBy] = useState<string>('newest')
+  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'name'>('newest')
 
   // Calculate price range from products
-  const priceRange = useMemo(() => {
-    if (!products || products.length === 0) {
-      return [0, 100] as [number, number]
-    }
-
+  const priceRange: [number, number] = useMemo(() => {
+    if (products.length === 0) return [0, 100]
+    
     const prices = products
-      .filter(product => product?.metadata?.price != null)
+      .filter(product => product.metadata?.price)
       .map(product => product.metadata.price)
     
-    if (prices.length === 0) {
-      return [0, 100] as [number, number]
-    }
-
+    if (prices.length === 0) return [0, 100]
+    
     const min = Math.min(...prices)
     const max = Math.max(...prices)
-    return [Math.floor(min), Math.ceil(max)] as [number, number]
+    return [Math.floor(min), Math.ceil(max)]
   }, [products])
 
   // Filter products based on current filters
   const filteredProducts = useMemo(() => {
-    if (!products || products.length === 0) {
-      return []
+    let filtered = products
+
+    // Filter by category
+    if (filters.category) {
+      filtered = filtered.filter(product => 
+        product.metadata?.category?.slug === filters.category
+      )
     }
 
-    return products.filter(product => {
-      if (!product || !product.metadata) {
-        return false
-      }
-
-      // Category filter
-      if (filters.category && product.metadata.category?.slug !== filters.category) {
-        return false
-      }
-
-      // Tags filter
-      if (filters.tags.length > 0) {
-        const productTags = product.metadata.tags || []
-        const productTagSlugs = productTags.map(tag => tag?.slug).filter(Boolean)
-        const hasMatchingTag = filters.tags.some(filterTag => 
-          productTagSlugs.includes(filterTag)
+    // Filter by tags
+    if (filters.tags.length > 0) {
+      filtered = filtered.filter(product =>
+        product.metadata?.tags?.some(tag => 
+          filters.tags.includes(tag.slug)
         )
-        if (!hasMatchingTag) {
-          return false
-        }
-      }
+      )
+    }
 
-      // Price range filter
-      const price = product.metadata.price
-      if (price != null && (price < filters.priceRange[0] || price > filters.priceRange[1])) {
-        return false
-      }
-
-      // Stock filter
-      if (filters.inStock !== null) {
-        if (filters.inStock && !product.metadata.in_stock) {
-          return false
-        }
-        if (!filters.inStock && product.metadata.in_stock) {
-          return false
-        }
-      }
-
-      return true
+    // Filter by price range
+    filtered = filtered.filter(product => {
+      const price = product.metadata?.price
+      if (!price) return false
+      return price >= filters.priceRange[0] && price <= filters.priceRange[1]
     })
+
+    // Filter by stock status
+    if (filters.inStock !== null) {
+      filtered = filtered.filter(product => 
+        product.metadata?.in_stock === filters.inStock
+      )
+    }
+
+    return filtered
   }, [products, filters])
 
-  // Sort filtered products
+  // Sort products
   const sortedProducts = useMemo(() => {
-    if (!filteredProducts || filteredProducts.length === 0) {
-      return []
-    }
-
     const sorted = [...filteredProducts]
     
     switch (sortBy) {
@@ -108,7 +89,7 @@ export default function ProductsClient({ products, categories }: ProductsClientP
       case 'price-high':
         return sorted.sort((a, b) => (b.metadata?.price || 0) - (a.metadata?.price || 0))
       case 'name':
-        return sorted.sort((a, b) => (a.metadata?.name || '').localeCompare(b.metadata?.name || ''))
+        return sorted.sort((a, b) => (a.metadata?.name || a.title).localeCompare(b.metadata?.name || b.title))
       case 'newest':
       default:
         return sorted.sort((a, b) => 
@@ -117,111 +98,99 @@ export default function ProductsClient({ products, categories }: ProductsClientP
     }
   }, [filteredProducts, sortBy])
 
-  // Handle filter updates - fixed parameter type
-  const handleFiltersChange = (newFilters: FilterState) => {
+  // Handle filter changes
+  const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters)
   }
 
-  // Get unique tags from all products
-  const availableTags = useMemo(() => {
-    if (!products || products.length === 0) {
-      return []
-    }
-
-    const tagMap = new Map()
-    products.forEach(product => {
-      if (product?.metadata?.tags) {
-        product.metadata.tags.forEach(tag => {
-          if (tag && tag.slug && tag.metadata?.name) {
-            tagMap.set(tag.slug, {
-              slug: tag.slug,
-              name: tag.metadata.name,
-              color: tag.metadata.color || '#6b7280'
-            })
-          }
-        })
-      }
+  // Clear all filters
+  const clearFilters = () => {
+    setFilters({
+      category: null,
+      tags: [],
+      priceRange: priceRange,
+      inStock: null
     })
-    return Array.from(tagMap.values())
-  }, [products])
-
-  // Handle price range update - ensure it's always a tuple
-  const handlePriceRangeChange = (range: number[]) => {
-    // Ensure we have exactly 2 elements for the tuple
-    const priceRange: [number, number] = [
-      range[0] ?? 0,
-      range[1] ?? 100
-    ]
-    setFilters(prev => ({ ...prev, priceRange }))
-  }
-
-  if (!products || products.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-xl text-secondary-600">No products available at the moment.</p>
-      </div>
-    )
   }
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
       {/* Filters Sidebar */}
-      <div className="lg:w-80 flex-shrink-0">
-        <ProductFilter
-          categories={categories}
-          tags={availableTags}
-          priceRange={priceRange}
-          onFiltersChange={handleFiltersChange}
-          onPriceRangeChange={handlePriceRangeChange}
-        />
-      </div>
+      <aside className="lg:w-1/4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+            {(filters.category || filters.tags.length > 0 || filters.inStock !== null) && (
+              <button
+                onClick={clearFilters}
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              >
+                Clear All
+              </button>
+            )}
+          </div>
+          
+          <ProductFilter
+            categories={categories}
+            products={products}
+            filters={filters}
+            priceRange={priceRange}
+            onFilterChange={handleFilterChange}
+          />
+        </div>
+      </aside>
 
       {/* Products Grid */}
-      <div className="flex-1">
-        {/* Sort Controls */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <p className="text-secondary-600">
+      <main className="lg:w-3/4">
+        {/* Sort and Results Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+          <p className="text-gray-600 mb-4 sm:mb-0">
             Showing {sortedProducts.length} of {products.length} products
           </p>
           
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="px-4 py-2 border border-secondary-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <option value="newest">Newest First</option>
-            <option value="name">Name A-Z</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-          </select>
+          <div className="flex items-center gap-2">
+            <label htmlFor="sort" className="text-sm font-medium text-gray-700">
+              Sort by:
+            </label>
+            <select
+              id="sort"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="newest">Newest First</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="name">Name A-Z</option>
+            </select>
+          </div>
         </div>
 
         {/* Products Grid */}
         {sortedProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {sortedProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-xl text-secondary-600">
-              No products match your current filters.
-            </p>
+            <div className="text-gray-400 mb-4">
+              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-8V9a2 2 0 01-2 2H9a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+            <p className="text-gray-600 mb-4">Try adjusting your filters to see more results.</p>
             <button
-              onClick={() => setFilters({
-                category: null,
-                tags: [],
-                priceRange: [0, 100],
-                inStock: null,
-              })}
-              className="mt-4 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              onClick={clearFilters}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               Clear Filters
-            </summary>
+            </button>
           </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }
