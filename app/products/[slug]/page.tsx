@@ -1,48 +1,58 @@
 // app/products/[slug]/page.tsx
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { getProduct, getProducts } from '@/lib/cosmic'
 import ProductGallery from '@/components/ProductGallery'
 import ProductInfo from '@/components/ProductInfo'
 import RelatedProducts from '@/components/RelatedProducts'
-import { notFound } from 'next/navigation'
-import type { Metadata } from 'next'
-import { getProductMetadata, getProductStructuredData, getBreadcrumbStructuredData } from '@/lib/seo'
+import { getProductMetadata, getBreadcrumbStructuredData, getProductStructuredData } from '@/lib/seo'
+import Link from 'next/link'
 
-interface Props {
+interface ProductPageProps {
   params: Promise<{ slug: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateStaticParams() {
+  const products = await getProducts()
+  
+  return products.map((product) => ({
+    slug: product.slug,
+  }))
+}
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  // IMPORTANT: In Next.js 15+, params are now Promises and MUST be awaited
   const { slug } = await params
+  
   const product = await getProduct(slug)
   
   if (!product) {
     return {
       title: 'Product Not Found',
-      description: 'The product you are looking for could not be found.',
+      description: 'The requested product could not be found.',
     }
   }
 
   return getProductMetadata(product)
 }
 
-export async function generateStaticParams() {
-  const products = await getProducts()
-  return products.map((product) => ({
-    slug: product.slug,
-  }))
-}
-
-export default async function ProductPage({ params }: Props) {
+export default async function ProductPage({ params }: ProductPageProps) {
+  // IMPORTANT: In Next.js 15+, params are now Promises and MUST be awaited
   const { slug } = await params
+  
   const product = await getProduct(slug)
 
   if (!product) {
     notFound()
   }
 
-  const relatedProducts = await getProducts()
-  const filteredRelatedProducts = relatedProducts
-    .filter(p => p.id !== product.id && p.metadata.category.id === product.metadata.category.id)
+  // Get related products (same category, excluding current product)
+  const allProducts = await getProducts()
+  const relatedProducts = allProducts
+    .filter(p => 
+      p.id !== product.id && 
+      p.metadata.category.id === product.metadata.category.id
+    )
     .slice(0, 4)
 
   // Generate structured data
@@ -60,60 +70,65 @@ export default async function ProductPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productStructuredData)
-        }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbData)
+          __html: JSON.stringify([productStructuredData, breadcrumbData])
         }}
       />
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb Navigation */}
-        <nav className="flex text-sm text-secondary-600 mb-8" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
-              <a href="/" className="hover:text-primary-600">Home</a>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <svg className="w-6 h-6 text-secondary-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+      <div className="min-h-screen bg-white">
+        <div className="container mx-auto px-4 py-8">
+          {/* Breadcrumb */}
+          <nav className="mb-8" aria-label="Breadcrumb">
+            <ol className="flex items-center space-x-2 text-sm text-gray-500">
+              <li>
+                <Link href="/" className="hover:text-primary-600 transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <svg className="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                 </svg>
-                <a href="/products" className="ml-1 hover:text-primary-600 md:ml-2">Products</a>
-              </div>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <svg className="w-6 h-6 text-secondary-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+              </li>
+              <li>
+                <Link href="/products" className="hover:text-primary-600 transition-colors">
+                  Products
+                </Link>
+              </li>
+              <li>
+                <svg className="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                 </svg>
-                <a href={`/categories/${product.metadata.category.slug}`} className="ml-1 hover:text-primary-600 md:ml-2">
+              </li>
+              <li>
+                <Link 
+                  href={`/categories/${product.metadata.category.slug}`}
+                  className="hover:text-primary-600 transition-colors"
+                >
                   {product.metadata.category.metadata.name}
-                </a>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <svg className="w-6 h-6 text-secondary-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+                </Link>
+              </li>
+              <li>
+                <svg className="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                 </svg>
-                <span className="ml-1 text-secondary-500 md:ml-2">{product.metadata.name}</span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+              </li>
+              <li className="text-gray-900 font-medium">
+                {product.metadata.name}
+              </li>
+            </ol>
+          </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-          <ProductGallery product={product} />
-          <ProductInfo product={product} />
+          {/* Product Details */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+            <ProductGallery product={product} />
+            <ProductInfo product={product} />
+          </div>
+
+          {/* Related Products */}
+          {relatedProducts.length > 0 && (
+            <RelatedProducts products={relatedProducts} />
+          )}
         </div>
-
-        {filteredRelatedProducts.length > 0 && (
-          <RelatedProducts products={filteredRelatedProducts} />
-        )}
       </div>
     </>
   )
