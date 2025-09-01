@@ -4,7 +4,8 @@ import ProductCard from '@/components/ProductCard'
 import CategoryCard from '@/components/CategoryCard'
 import NewsletterSignup from '@/components/NewsletterSignup'
 import { getProducts, getCategories } from '@/lib/cosmic'
-import { getHomeMetadata, getWebsiteStructuredData, getOrganizationStructuredData } from '@/lib/seo'
+import { getHomeMetadata } from '@/lib/seo'
+import { getWebsiteStructuredData, getOrganizationStructuredData } from '@/lib/seo'
 
 export async function generateMetadata(): Promise<Metadata> {
   return getHomeMetadata()
