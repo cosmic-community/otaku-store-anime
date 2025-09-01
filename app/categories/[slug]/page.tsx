@@ -1,15 +1,37 @@
 // app/categories/[slug]/page.tsx
-import { getCategory, getProductsByCategory } from '@/lib/cosmic'
-import { notFound } from 'next/navigation'
+import { getCategory, getProductsByCategory, getCategories } from '@/lib/cosmic'
 import ProductCard from '@/components/ProductCard'
+import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import { getCategoryMetadata, getBreadcrumbStructuredData } from '@/lib/seo'
 
-interface CategoryPageProps {
+interface Props {
   params: Promise<{ slug: string }>
 }
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
+  const category = await getCategory(slug)
   
+  if (!category) {
+    return {
+      title: 'Category Not Found',
+      description: 'The category you are looking for could not be found.',
+    }
+  }
+
+  return getCategoryMetadata(category)
+}
+
+export async function generateStaticParams() {
+  const categories = await getCategories()
+  return categories.map((category) => ({
+    slug: category.slug,
+  }))
+}
+
+export default async function CategoryPage({ params }: Props) {
+  const { slug } = await params
   const [category, products] = await Promise.all([
     getCategory(slug),
     getProductsByCategory(slug)
@@ -19,94 +41,102 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound()
   }
 
+  // Generate breadcrumb structured data
+  const breadcrumbData = getBreadcrumbStructuredData([
+    { name: 'Home', url: '/' },
+    { name: 'Products', url: '/products' },
+    { name: category.metadata.name }
+  ])
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Category Header */}
-      <div className="mb-12 text-center">
-        {category.metadata.category_image && (
-          <div className="relative mb-8 max-w-2xl mx-auto">
-            <img
-              src={`${category.metadata.category_image.imgix_url}?w=800&h=400&fit=crop&auto=format,compress`}
-              alt={category.metadata.name}
-              className="w-full h-64 object-cover rounded-lg shadow-lg"
-              width={800}
-              height={256}
-            />
-            <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-white text-center">
-                {category.metadata.name}
-              </h1>
+    <>
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbData)
+        }}
+      />
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Breadcrumb Navigation */}
+        <nav className="flex text-sm text-secondary-600 mb-8" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <a href="/" className="hover:text-primary-600">Home</a>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <svg className="w-6 h-6 text-secondary-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+                </svg>
+                <a href="/products" className="ml-1 hover:text-primary-600 md:ml-2">Products</a>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <svg className="w-6 h-6 text-secondary-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+                </svg>
+                <span className="ml-1 text-secondary-500 md:ml-2">{category.metadata.name}</span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+
+        {/* Category Header */}
+        <div className="mb-12">
+          {category.metadata.category_image && (
+            <div className="mb-8">
+              <img
+                src={`${category.metadata.category_image.imgix_url}?w=1200&h=300&fit=crop&auto=format,compress`}
+                alt={category.metadata.name}
+                className="w-full h-48 md:h-64 object-cover rounded-lg"
+              />
             </div>
-          </div>
-        )}
-        
-        {!category.metadata.category_image && (
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-secondary-900">
+          )}
+          
+          <h1 className="text-4xl font-bold text-secondary-900 mb-4">
             {category.metadata.name}
           </h1>
-        )}
+          
+          {category.metadata.description && (
+            <p className="text-lg text-secondary-600 max-w-3xl">
+              {category.metadata.description}
+            </p>
+          )}
+          
+          <div className="mt-6">
+            <p className="text-secondary-500">
+              {products.length} product{products.length !== 1 ? 's' : ''} found
+            </p>
+          </div>
+        </div>
 
-        {category.metadata.description && (
-          <p className="text-xl text-secondary-600 max-w-3xl mx-auto">
-            {category.metadata.description}
-          </p>
-        )}
-      </div>
-
-      {/* Products Grid */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-6 text-secondary-900">
-          {products.length} {products.length === 1 ? 'Product' : 'Products'} in {category.metadata.name}
-        </h2>
-
+        {/* Products Grid */}
         {products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📦</div>
-            <h3 className="text-xl text-secondary-600 mb-4">No products found</h3>
-            <p className="text-secondary-500 mb-6">
-              We're currently restocking this category. Check back soon for new arrivals!
+          <div className="text-center py-16">
+            <h3 className="text-xl font-semibold text-secondary-700 mb-4">
+              No products found in this category
+            </h3>
+            <p className="text-secondary-500 mb-8">
+              Check back soon for new arrivals!
             </p>
             <a 
-              href="/products" 
-              className="btn-primary"
+              href="/products"
+              className="inline-block bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
             >
               Browse All Products
             </a>
           </div>
         )}
       </div>
-
-      {/* Back to Categories */}
-      <div className="text-center">
-        <a 
-          href="/products" 
-          className="btn-secondary"
-        >
-          Browse All Categories
-        </a>
-      </div>
-    </div>
+    </>
   )
-}
-
-export async function generateMetadata({ params }: CategoryPageProps) {
-  const { slug } = await params
-  const category = await getCategory(slug)
-
-  if (!category) {
-    return {
-      title: 'Category Not Found - Otaku Store'
-    }
-  }
-
-  return {
-    title: `${category.metadata.name} - Otaku Store`,
-    description: category.metadata.description || `Browse our collection of ${category.metadata.name.toLowerCase()} at Otaku Store.`
-  }
 }
