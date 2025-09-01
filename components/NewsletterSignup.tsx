@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { subscribeToNewsletter } from '@/lib/cosmic'
 
 export default function NewsletterSignup() {
   const [email, setEmail] = useState('')
@@ -21,14 +20,22 @@ export default function NewsletterSignup() {
     setMessage('')
 
     try {
-      const success = await subscribeToNewsletter(email)
-      
-      if (success) {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
         setIsSubscribed(true)
         setMessage('Thanks for subscribing! You\'ll hear from us soon.')
         setEmail('')
       } else {
-        setMessage('Something went wrong. Please try again.')
+        setMessage(data.error || 'Something went wrong. Please try again.')
       }
     } catch (error) {
       setMessage('Failed to subscribe. Please try again.')
